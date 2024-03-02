@@ -1,0 +1,56 @@
+start of the list
+
+if list is nothing but skip, return
+
+check if there's no parsiing errors(quotes closed, parenthesis closed, no pipe at the beginning alone,
+neither at the end)
+
+get size of the first word as long as it isn't a wildcard, a redirection or a pipe
+
+how to check the wildcard?
+
+either there's soemthing before the wildcard, after the wildcard, both or neither
+
+so i have to check the token before and after the wildcard
+
+if the token before is arg, i checkthe next one, an i the next one is arg i keep going with the size
+
+if token before is skip, size should be = 0, so i check if the next one is an arg
+
+if it is I keep going, else TK_wilcard alone, i need new define
+
+else, if there is something before, token will be TK_wildcard_pref
+
+else if there's nothing before but there's after, then TK_wildcard_suf
+
+else if both, TK_wildcard_both
+
+4 different behaviors
+
+now redirections
+
+if >> it should append the command to the file, so outfile what's next to it
+
+if there's nothing it's an error
+
+same with input redirection
+
+the syntax is ALWAYS:
+
+command options(if any) redirection(if any) file(if any)
+
+if no redirection, input/output is stdin/stdout
+
+if no file, file input is stdin and file output is stdout
+
+options always start with -, if not they're considered files
+
+for the pattern matching, we'll just put the argument that'll be at the end, which isn't an option, 
+
+if it fails then it wasn't a pattern but a file, so you pass it as an outfile in a new execve
+
+it it still fails then it the problem is from the command itself so it'll be the message error that
+
+leo showed.
+
+in the first case the outfile is always guessed as the stdout
