@@ -19,11 +19,12 @@ void	flush_array(char **tab)
 
 	k = 0;
 	i = 0;
-	while (tab[i] != NULL)
+	while (tab[i])
 	{
 		free(tab[i]);
 		i++;
 	}
+	tab[0] = NULL;
 }
 
 char	*epur_str(char *s)
@@ -60,7 +61,8 @@ int	token_redirection(int token, int mode)
 	else if (mode == 3)
 	{
 		if (token == TK_APPEND || token == TK_DLMTR || token == TK_OUTPUT
-			|| token == TK_INPUT || token == TK_PIPES || token == TK_PRIO)
+			|| token == TK_INPUT || token == TK_PIPES || token == TK_PRIO
+			|| token == TK_AND || token == TK_OR)
 			return (1);
 	}
 	return (0);
@@ -79,7 +81,7 @@ int	check_if_isatty(char *file, int token)
 		if (fd == -1)
 		{
 			free(file);
-			return (IS_TTY);
+			return (SUCCESS);
 		}
 		if (isatty(fd))
 			return (close(fd), free(file), IS_TTY);
@@ -94,7 +96,7 @@ int	check_if_isatty(char *file, int token)
 		if (fd == -1)
 		{
 			free(file);
-			return (IS_TTY);
+			return (SUCCESS);
 		}
 		if (isatty(fd))
 			return (close(fd), free(file), IS_TTY);
@@ -109,7 +111,7 @@ int	check_if_isatty(char *file, int token)
 		if (fd == -1)
 		{
 			free(file);
-			return (IS_TTY);
+			return (SUCCESS);
 		}
 		if (isatty(fd))
 			return (close(fd), free(file), IS_TTY);
@@ -179,6 +181,9 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 	int	fullness;
 
 	fullness = 0;
+	// ft_print_list2(*list);
+	if ((*list)->token == TK_END)
+		return ((*s)->tab[fullness] = NULL, SUCCESS);
 	while ((*list)->next)
 	{
 		if (token_redirection((*list)->token, 3))
@@ -200,21 +205,54 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 	return (SUCCESS);
 }
 
+static t_last_list	*new_node(void)
+{
+	t_last_list	*list;
+
+	list = malloc(sizeof(t_last_list));
+	if (!list)
+		return (NULL);
+	list->next = NULL;
+	list->prev = NULL;
+	list->token = -100;
+	return (list);
+}
+
+static int	create(t_last_list **list)
+{
+	if ((*list)->token == -100 || !(*list)->str)
+	{
+		if ((*list)->str)
+			free((*list)->str);
+		(*list)->str = NULL;
+		return (SUCCESS);
+	}
+	(*list)->next = new_node();
+	if (!(*list)->next)
+		return (ERR_MALLOC);
+	(*list)->next->prev = (*list);
+	(*list) = (*list)->next;
+	(*list)->str = NULL;
+	return (SUCCESS);
+}
+
 int	recursive_priority(t_struct *s, t_last_list **list)
 {
 	t_last_list	*temp;
+	t_last_list	*head;
 	int			prio;
 
 	prio = 1;
 	(*list) = (*list)->next;
-	temp = (t_last_list *)malloc(sizeof(t_last_list));
-	if (!temp)
-		return (ft_free_changed_list(temp), ERR_MALLOC);
-	temp->prev = NULL;
-	temp->next = NULL;
-	temp->str = NULL;
-	temp->token = NOTHING;
-	while (prio != 0 && (*list)->next)
+	head = (t_last_list *)malloc(sizeof(t_last_list));
+	if (!head)
+		return (ft_free_changed_list(head), ERR_MALLOC);
+	head->prev = NULL;
+	head->next = NULL;
+	head->str = NULL;
+	head->token = NOTHING;
+	temp = head;
+	while (prio != 0 && (*list)->token != TK_END)
 	{
 		if ((*list)->token == TK_PRIO)
 			prio++;
@@ -226,27 +264,43 @@ int	recursive_priority(t_struct *s, t_last_list **list)
 			{
 				temp->str = ft_strdup((*list)->str);
 				if (!temp->str)
-					return (ft_free_changed_list(temp), ERR_MALLOC);
+					return (ft_free_changed_list(head), ERR_MALLOC);
 				temp->token = (*list)->token;
 			}
 			else
 			{
-				temp->next = (t_last_list *)malloc(sizeof(t_last_list));
-				if (!temp)
-					return (ft_free_changed_list(temp), ERR_MALLOC);
-				temp->next->prev = temp;
-				temp = temp->next;
+				if (create(&temp) == ERR_MALLOC)
+					return (ft_free_changed_list(head), ERR_MALLOC);
 				temp->str = ft_strdup((*list)->str);
 				if (!temp->str)
-					return (ft_free_changed_list(temp), ERR_MALLOC);
+					return (ft_free_changed_list(head), ERR_MALLOC);
 				temp->token = (*list)->token;
 			}
+			(*list) = (*list)->next;
 		}
-		(*list) = (*list)->next;
 	}
-	if (execute(s, temp) == ERR_MALLOC)
-		return (ft_free_changed_list(temp), ERR_MALLOC);
-	ft_free_changed_list(temp);
+	if (temp->token != TK_END)
+	{
+		temp->next = new_list();
+		if (!temp->next)
+			return (ERR_MALLOC);
+		temp->next->prev = temp;
+		temp->next->str = NULL;
+		temp = temp->next;
+		temp->token = TK_END;
+	}
+	temp->next = NULL;
+	if (temp->str)
+	{
+		free(temp->str);
+		temp->str = NULL;
+	}
+	temp = head;
+	ft_print_list2(*list);
+	ft_print_list2(head);
+	if (execute(s, head) == ERR_MALLOC)
+		return (ft_free_changed_list(head), ERR_MALLOC);
+	ft_free_changed_list(head);
 	return (SUCCESS);
 }
 
@@ -279,7 +333,7 @@ int	execute(t_struct *s, t_last_list *list)
 			if (recursive_priority(s, &list) == ERR_MALLOC)
 				return (ERR_MALLOC);
 		}
-		if (token_redirection(list->token, 0))
+		else if (token_redirection(list->token, 0))
 		{
 			while (list->next && list->next->str
 				&& token_redirection(list->token, 0))
@@ -305,16 +359,33 @@ int	execute(t_struct *s, t_last_list *list)
 					list = list->next->next;
 				}
 			}
+		}
+		if (list->token == TK_PIPES || list->token == TK_END)
+		{
 			epur_commands(&s);
 			do_exec(&s, &file);
 			flush_files(&file);
 			flush_array(s->tab);
 		}
-		else if (list->next && list->next->token == TK_AND)
+		else if (list->token == TK_AND)
 		{
-			// if (s->err == FAILURE)
-			// 	go_to_next_stop(&list);
-			;
+			printf("\n&&\n");
+			epur_commands(&s);
+			do_exec(&s, &file);
+			flush_files(&file);
+			flush_array(s->tab);
+			if (s->err == FAILURE)
+				printf("Noooooo :(\n");
+		}
+		else if (list->token == TK_OR)
+		{
+			printf("\n||\n");
+			epur_commands(&s);
+			do_exec(&s, &file);
+			flush_files(&file);
+			flush_array(s->tab);
+			if (s->err == WINNING)
+				printf("Noooooo2 :(\n");
 		}
 		if (list->next)
 			list = list->next;

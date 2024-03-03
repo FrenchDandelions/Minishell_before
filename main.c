@@ -138,13 +138,19 @@ int	main(int argc, char **argv)
 	int			err2;
 
 	err = 0;
+	str = NULL;
 	(void)argv;
 	(void)argc;
 	while (1)
 	{
 		str = readline("\033[1;34mMinishell$\033[0m ");
 		if (!str)
-			return (printf("Bye ;)\n"), SUCCESS);
+		{
+			rl_clear_history();
+			clear_history();
+			return (printf("Bye ;)\n"), exit(0), SUCCESS);
+		}
+		add_history((const char *)str);
 		if (quote_checker(str) < SUCCESS)
 		{
 			printf("Error\n");

@@ -46,8 +46,10 @@
 # define SIZE 4096
 # define IS_TTY 21
 # define FAILURE -1000000
+# define WINNING 1000000
 # define ERR_MINI_DOC "\033[0;32mMinishell: warning: mini_doc delimited by end-of-file (wanted `"
 # include <fcntl.h>
+# include <malloc.h>
 # include <readline/history.h>
 # include <readline/readline.h>
 # include <stdio.h>
@@ -125,5 +127,7 @@ int						parse_heredoc(t_struct *s);
 int						quote_checker(char *str);
 void					ft_free_changed_list(t_last_list *list);
 int						execute(t_struct *s, t_last_list *list);
+void					ft_print_list2(t_last_list *lst);
+t_last_list				*new_list(void);
 
 #endif

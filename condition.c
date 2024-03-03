@@ -26,7 +26,7 @@ static t_last_list	*new_node(int size)
 	return (list);
 }
 
-static t_last_list	*new_list(void)
+t_last_list	*new_list(void)
 {
 	t_last_list	*list;
 

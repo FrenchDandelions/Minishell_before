@@ -26,7 +26,7 @@ static t_last_list	*new_node(int size)
 	return (list);
 }
 
-static t_last_list	*new_list(void)
+t_last_list	*new_list(void)
 {
 	t_last_list	*list;
 
@@ -49,13 +49,6 @@ static t_parse_list	*skip_first(t_parse_list *copy)
 	return (copy);
 }
 
-void	char_to_string(char c, char *str)
-{
-	str[0] = c;
-	str[1] = '\0';
-	return ;
-}
-
 int	check_if_arg(t_struct *parse)
 {
 	if (parse->p_lst->next && (parse->p_lst->token == TK_ARG
@@ -65,25 +58,25 @@ int	check_if_arg(t_struct *parse)
 	return (0);
 }
 
-t_last_list	*step(t_last_list **list)
+int	step(t_last_list **list)
 {
 	if ((*list)->token == -100)
 	{
 		if ((*list)->str)
 			free((*list)->str);
 		(*list)->str = NULL;
-		return (*list);
+		return (SUCCESS);
 	}
 	(*list)->next = new_node(0);
 	if (!(*list)->next)
-		return (NULL);
+		return (ERR_MALLOC);
 	(*list)->next->prev = (*list);
 	(*list) = (*list)->next;
 	(*list)->str = NULL;
-	return (*list);
+	return (SUCCESS);
 }
 
-t_last_list	*create(t_last_list **list, int *size)
+int	create(t_last_list **list, int *size)
 {
 	if ((*list)->token == -100 || !(*list)->str)
 	{
@@ -91,20 +84,20 @@ t_last_list	*create(t_last_list **list, int *size)
 			free((*list)->str);
 		(*list)->str = calloc(sizeof(char), (*size) + 1);
 		if (!(*list)->str)
-			return (NULL);
+			return (ERR_MALLOC);
 		(*size) = 0;
-		return (*list);
+		return (SUCCESS);
 	}
 	(*list)->next = new_node(*size);
 	if (!(*list)->next)
-		return (NULL);
+		return (ERR_MALLOC);
 	(*list)->next->prev = (*list);
 	(*list) = (*list)->next;
 	(*list)->str = calloc(sizeof(char), (*size) + 1);
 	if (!(*list)->str)
-		return (NULL);
+		return (ERR_MALLOC);
 	(*size) = 0;
-	return (*list);
+	return (SUCCESS);
 }
 
 int	get_token(t_struct **parse, t_last_list **list)
@@ -152,27 +145,19 @@ int	next_stop_token(int token)
 
 int	quote_line_fill(t_struct **parse, t_last_list **list, int type, int *size)
 {
-	char	*str;
-	int		delimiter;
+	int	delimiter;
 
 	delimiter = *size;
 	(*size)++;
-	*list = create(&(*list), &(*size));
-	if (!(*list))
+	if (create(&(*list), &(*size)) == ERR_MALLOC)
 		return (ERR_MALLOC);
 	while ((*parse)->p_lst->next && (*size) <= delimiter)
 	{
-		// printf("Here: %c, %d\n", (*parse)->p_lst->c, *size);
-		str = malloc(sizeof(char) * 2);
-		if (!str)
-			return (ERR_MALLOC);
-		char_to_string((*parse)->p_lst->c, str);
-		ft_memcpy((*list)->str + (*size), str, 1);
+		(*list)->str[(*size)] = (*parse)->p_lst->c;
 		if ((*list)->token == -100)
 			(*list)->token = type;
 		(*size)++;
 		(*parse)->p_lst = (*parse)->p_lst->next;
-		free(str);
 	}
 	return (SUCCESS);
 }
@@ -199,7 +184,6 @@ void	size_until_nothing_or_special_char(t_struct **parse, int *type,
 	}
 	if (check_argument((*parse)->p_lst->token))
 		(*size)++;
-	// printf("Here: %c, %d\n", (*parse)->p_lst->c, *size);
 }
 
 int	recursive_line_size(t_struct **parse, int *type, int *size)
@@ -234,7 +218,6 @@ int	last_part(t_last_list **list, t_struct **parse, t_last_list **head)
 {
 	if ((*list)->token != TK_END)
 	{
-		// printf("here bby\n");
 		(*list)->next = new_list();
 		if (!(*list)->next)
 			return (ERR_MALLOC);
@@ -243,7 +226,6 @@ int	last_part(t_last_list **list, t_struct **parse, t_last_list **head)
 		(*list) = (*list)->next;
 		(*list)->token = (*parse)->p_lst->token;
 	}
-	// printf("why?\n");
 	(*list)->next = NULL;
 	if ((*list)->str)
 	{
@@ -257,16 +239,10 @@ int	last_part(t_last_list **list, t_struct **parse, t_last_list **head)
 
 int	create_till_next_arg(t_struct **parse, t_last_list **list, int *size)
 {
-	char	*str;
-
 	while (check_if_arg((*parse))
 		&& (!(next_stop_token((*parse)->p_lst->token))))
 	{
-		str = malloc(sizeof(char) * 2);
-		if (!str)
-			return (ERR_MALLOC);
-		char_to_string((*parse)->p_lst->c, str);
-		ft_memcpy((*list)->str + (*size), str, 1);
+		(*list)->str[(*size)] = (*parse)->p_lst->c;
 		if ((*list)->token != TK_SINGLE && (*list)->token != TK_DOUBLE
 			&& ((*parse)->p_lst->token == TK_SINGLE
 				|| (*parse)->p_lst->token == TK_DOUBLE))
@@ -275,7 +251,6 @@ int	create_till_next_arg(t_struct **parse, t_last_list **list, int *size)
 			(*list)->token = (*parse)->p_lst->token;
 		(*size)++;
 		(*parse)->p_lst = (*parse)->p_lst->next;
-		free(str);
 	}
 	return (SUCCESS);
 }
@@ -309,8 +284,7 @@ int	do_next_stop_token(t_struct **parse, t_last_list **list)
 {
 	if ((*parse)->p_lst && next_stop_token((*parse)->p_lst->token))
 	{
-		(*list) = step(&(*list));
-		if (!(*list))
+		if (step(&(*list)) == ERR_MALLOC)
 			return (ERR_MALLOC);
 		(*list)->str = calloc(sizeof(char), 3);
 		if (!(*list)->str)
@@ -323,8 +297,7 @@ int	do_next_stop_token(t_struct **parse, t_last_list **list)
 int	check_which_argument(t_struct **parse, t_last_list **list,
 		t_parse_list **copy, int *size)
 {
-	(*list) = create(&(*list), &(*size));
-	if (!(*list))
+	if (create(&(*list), &(*size)) == ERR_MALLOC)
 		return (ERR_MALLOC);
 	(*parse)->p_lst = (*copy);
 	if ((*parse)->p_lst->next)
