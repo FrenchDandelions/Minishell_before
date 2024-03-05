@@ -336,7 +336,11 @@ int	recursive_priority(t_struct *s, t_last_list **list, int depth)
 }
 
 /*here, this one,if it's exit the exit variable should be set to EXIT,
-	that's the only thing you need to worry about*/
+	that's the only thing you need to worry about,
+	also stat is kinda useless but it's because i don't get
+ 	how the export and stuff with pipes and && and || work,
+  	so feel free to use it or not
+*/
 int	do_exec(t_struct **s, t_file *file, int stat)
 {
 	int	i;
