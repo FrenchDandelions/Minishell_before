@@ -111,6 +111,7 @@ typedef struct s_struct
 	int					exit;
 	char				*here_doc_file;
 	char				*delim;
+	char				**env;
 	t_parse_list		*p_lst;
 	t_last_list			*l_lst;
 	t_last_list			*head_ll;

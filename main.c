@@ -130,7 +130,34 @@ int	check_parenthesis(char *str)
 	return (SUCCESS);
 }
 
-int	main(int argc, char **argv)
+int	get_env(char **env, t_struct *s)
+{
+	int	i;
+
+	i = 0;
+	while (env[i])
+		i++;
+	s->env = (char **)malloc(sizeof(char *) * (i + 1));
+	if (!s->env)
+		return (ERR_MALLOC);
+	i = 0;
+	while (env[i])
+	{
+		s->env[i] = ft_strdup(env[i]);
+		if (!s->env[i])
+		{
+			i--;
+			for (; i != 0; i--)
+				free(s->env[i]);
+			free(s->env);
+			return (ERR_MALLOC);
+		}
+		i++;
+	}
+	return (SUCCESS);
+}
+
+int	main(int argc, char **argv, char **env)
 {
 	t_struct	s;
 	char		*str;
@@ -143,6 +170,8 @@ int	main(int argc, char **argv)
 	s.exit = 0;
 	(void)argv;
 	(void)argc;
+	if (get_env(env, &s) == ERR_MALLOC)
+		return (ERR_MALLOC);
 	while (1)
 	{
 		str = readline("\033[1;34mMinishell$\033[0m ");
