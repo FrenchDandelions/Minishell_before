@@ -223,7 +223,7 @@ int	main(int argc, char **argv, char **env)
 		}
 		// ft_print_list2(s.l_lst);
 		s.tab[0] = NULL;
-		stat = execute(&s, s.head_ll, 0);
+		stat = execute(&s, s.head_ll, 0, 0);
 		if (stat == ERR_PARS)
 		{
 			dprintf(2, "Malloc\n");

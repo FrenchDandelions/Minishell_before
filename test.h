@@ -80,12 +80,13 @@ typedef struct s_last_list
 
 typedef struct s_file
 {
-	char				*infile[4096];
-	char				*outfile[4096];
+	char				*infile[SIZE];
+	char				*outfile[SIZE];
 	char				*here_doc_file;
 	int					mode_in;
 	int					mode_out;
-
+	int					token[SIZE];
+	int					limit_heredoc;
 }						t_file;
 
 typedef struct s_tree
@@ -103,7 +104,7 @@ typedef struct s_struct
 {
 	char				*str;
 	int					err;
-	char				*tab[4096];
+	char				*tab[SIZE];
 	char				*file_in;
 	char				*file_out;
 	int					mode_in;
@@ -131,7 +132,8 @@ char					*ft_gnl_strjoin(char *s1, char *s2, size_t len);
 int						parse_heredoc(t_struct *s);
 int						quote_checker(char *str);
 void					ft_free_changed_list(t_last_list *list);
-int						execute(t_struct *s, t_last_list *list, int depth);
+int						execute(t_struct *s, t_last_list *list, int depth,
+							int pipe);
 void					ft_print_list2(t_last_list *lst);
 t_last_list				*new_list(void);
 

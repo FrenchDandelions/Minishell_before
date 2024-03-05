@@ -119,7 +119,7 @@ int	check_if_isatty(char *file, int token)
 	return (SUCCESS);
 }
 
-int	create_new_file(t_file *f, char *file, int type)
+int	create_new_file(t_file *f, char *file, int type, int token)
 {
 	int	check;
 	int	i;
@@ -135,7 +135,7 @@ int	create_new_file(t_file *f, char *file, int type)
 	{
 		while (f->outfile[i])
 			i++;
-		if (i == 4096)
+		if (i == SIZE)
 			return (ERR_MALLOC);
 		f->mode_out = type;
 		f->outfile[i] = ft_strdup(file);
@@ -147,13 +147,20 @@ int	create_new_file(t_file *f, char *file, int type)
 	{
 		while (f->infile[i])
 			i++;
-		if (i == 4096)
+		if (i == SIZE)
 			return (ERR_MALLOC);
 		f->mode_in = type;
 		f->infile[i] = ft_strdup(file);
 		if (!f->infile[i])
 			return (ERR_MALLOC);
 		f->infile[i + 1] = NULL;
+		if (type == TK_DLMTR)
+		{
+			if (f->limit_heredoc + 1 == SIZE)
+				return (ERR_MALLOC);
+			f->token[f->limit_heredoc] = token;
+			f->limit_heredoc++;
+		}
 	}
 	return (SUCCESS);
 }
@@ -172,6 +179,7 @@ void	set_files(t_file *file)
 	file->outfile[0] = NULL;
 	file->mode_in = NOTHING;
 	file->mode_out = NOTHING;
+	file->limit_heredoc = 0;
 }
 
 void	flush_files(t_file *file)
@@ -208,7 +216,7 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 	{
 		if (token_redirection((*list)->token, 3))
 			break ;
-		if (fullness + 1 == 4096)
+		if (fullness + 1 == SIZE)
 		{
 			printf("Error\nToo many commands\n");
 			(*s)->tab[fullness] = NULL;
@@ -265,7 +273,7 @@ static int	create(t_last_list **list)
 	return (SUCCESS);
 }
 
-int	recursive_priority(t_struct *s, t_last_list **list, int depth)
+int	recursive_priority(t_struct *s, t_last_list **list, int depth, int pipe)
 {
 	t_last_list	*temp;
 	t_last_list	*head;
@@ -329,7 +337,7 @@ int	recursive_priority(t_struct *s, t_last_list **list, int depth)
 	ft_print_list2(*list);
 	ft_print_list2(head);
 	depth++;
-	if (execute(s, head, depth) == ERR_MALLOC)
+	if (execute(s, head, depth, pipe) == ERR_MALLOC)
 		return (ft_free_changed_list(head), ERR_MALLOC);
 	ft_free_changed_list(head);
 	return (SUCCESS);
@@ -338,8 +346,10 @@ int	recursive_priority(t_struct *s, t_last_list **list, int depth)
 /*here, this one,if it's exit the exit variable should be set to EXIT,
 	that's the only thing you need to worry about,
 	also stat is kinda useless but it's because i don't get
- 	how the export and stuff with pipes and && and || work,
-  	so feel free to use it or not
+	how the export and stuff with pipes and && and || work,
+	so feel free to use it or not,
+	and if stat is at 1,it means that we're inside a && or a
+		|| so you shouldn't pipe
 */
 int	do_exec(t_struct **s, t_file *file, int stat)
 {
@@ -388,8 +398,8 @@ int	recursive_tab_filler(t_struct **s, t_last_list **list, t_file *file)
 		while ((*list)->next && (*list)->next->str
 			&& token_redirection((*list)->token, 0))
 		{
-			if (create_new_file(file, (*list)->next->str,
-					(*list)->token) == ERR_MALLOC)
+			if (create_new_file(file, (*list)->next->str, (*list)->token,
+					(*list)->next->token) == ERR_MALLOC)
 				return (flush_array((*s)->tab), flush_files(file), ERR_MALLOC);
 			(*list) = (*list)->next->next;
 		}
@@ -403,7 +413,7 @@ int	recursive_tab_filler(t_struct **s, t_last_list **list, t_file *file)
 	you have to check the s->tab for the commands and the file struct passed as parameters,
 	even if there is no command, the files should be opened,
 		just fill the do_exec function*/
-int	execute(t_struct *s, t_last_list *list, int depth)
+int	execute(t_struct *s, t_last_list *list, int depth, int pipe)
 {
 	t_file	file;
 	int		status;
@@ -413,7 +423,7 @@ int	execute(t_struct *s, t_last_list *list, int depth)
 	{
 		if (list->token == TK_PRIO)
 		{
-			status = recursive_priority(s, &list, depth);
+			status = recursive_priority(s, &list, depth, pipe);
 			if (status == ERR_MALLOC)
 				return (ERR_MALLOC);
 		}
@@ -422,7 +432,8 @@ int	execute(t_struct *s, t_last_list *list, int depth)
 			while (list->next && list->next->str
 				&& token_redirection(list->token, 0))
 			{
-				status = create_new_file(&file, list->next->str, list->token);
+				status = create_new_file(&file, list->next->str, list->token,
+						list->next->token);
 				if (status == ERR_MALLOC)
 					return (ERR_MALLOC);
 				list = list->next->next;
@@ -456,7 +467,7 @@ int	execute(t_struct *s, t_last_list *list, int depth)
 			flush_array(s->tab);
 			if (s->err == FAILURE)
 			{
-				status = do_exec(&s, &file, 1);
+				status = execute(s, list, depth, 0);
 				if (status == ERR_MALLOC)
 					return (flush_files(&file), flush_array(s->tab),
 						ERR_MALLOC);
@@ -473,7 +484,7 @@ int	execute(t_struct *s, t_last_list *list, int depth)
 			flush_array(s->tab);
 			if (s->err == WINNING)
 			{
-				status = do_exec(&s, &file, 1);
+				status = execute(s, list, depth, 0);
 				if (status == ERR_MALLOC)
 					return (flush_files(&file), flush_array(s->tab),
 						ERR_MALLOC);
