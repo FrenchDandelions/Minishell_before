@@ -16,27 +16,17 @@ int	end_heredoc(t_last_list **list, char *buf, char *str)
 {
 	free(str);
 	free((*list)->next->str);
-	if ((int)strlen(buf) > 0)
+	if (buf)
 	{
 		(*list)->next->str = strdup(buf);
 		if (!(*list)->next->str)
-			return (ERR_MALLOC);
+			return (free(buf), ERR_MALLOC);
 		free(buf);
 	}
 	else
 	{
-		free(buf);
 		(*list)->next->str = NULL;
 	}
-	return (SUCCESS);
-}
-
-int	realloc_buffer(char **buf, int *size, char *str)
-{
-	(*size) = (*size) * 2;
-	(*buf) = realloc((*buf), (*size));
-	if (!(*buf))
-		return (free(str), ERR_MALLOC);
 	return (SUCCESS);
 }
 
@@ -52,7 +42,7 @@ int	add_to_buffer(char **buf, char *str)
 	{
 		(*buf) = strdup(str);
 		if (!(*buf))
-			return (ERR_MALLOC);
+			return (free(str), ERR_MALLOC);
 	}
 	return (SUCCESS);
 }
@@ -61,12 +51,8 @@ int	open_heredoc(t_last_list **list)
 {
 	char	*str;
 	char	*buf;
-	int		size;
 
-	size = SIZE;
-	buf = strdup("");
-	if (!buf)
-		return (ERR_MALLOC);
+	buf = NULL;
 	while (1)
 	{
 		str = readline("\033[38;5;220mmini_doc>\033[0m ");
@@ -74,10 +60,7 @@ int	open_heredoc(t_last_list **list)
 			return (dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
 					(*list)->next->str), end_heredoc(&(*list), buf, str));
 		str = ft_gnl_strjoin(str, "\n", 1);
-		if (buf && ((int)strlen(buf) + (int)strlen(str)) > size)
-			if (realloc_buffer(&buf, &size, str) == ERR_MALLOC)
-				return (ERR_MALLOC);
-		if (strncmp(str, (*list)->next->str,
+		if (buf && strncmp(str, (*list)->next->str,
 				(int)strlen((*list)->next->str)) == 0)
 			return (end_heredoc(&(*list), buf, str));
 		if (add_to_buffer(&buf, str) == ERR_MALLOC)

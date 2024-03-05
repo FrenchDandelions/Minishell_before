@@ -136,9 +136,8 @@ int	main(int argc, char **argv)
 	char		*str;
 	int			err;
 	int			err2;
-	int			stat;
+	int			status;
 
-	stat = 0;
 	str = NULL;
 	s.exit = 0;
 	(void)argv;
@@ -149,6 +148,7 @@ int	main(int argc, char **argv)
 		if (!str)
 		{
 			rl_clear_history();
+			clear_history();
 			return (printf("Bye ;)\n"), exit(0), SUCCESS);
 		}
 		add_history((const char *)str);
@@ -194,8 +194,8 @@ int	main(int argc, char **argv)
 		}
 		// ft_print_list2(s.l_lst);
 		s.tab[0] = NULL;
-		stat = execute(&s, s.head_ll, 0);
-		if (stat == ERR_PARS)
+		status = execute(&s, s.head_ll, 0);
+		if (status == ERR_PARS)
 		{
 			dprintf(2, "Malloc\n");
 			ft_free_parse_list(s.p_lst);
@@ -204,14 +204,13 @@ int	main(int argc, char **argv)
 			free(str);
 			continue ;
 		}
-		else if (stat == EXIT)
+		else if (status == EXIT)
 		{
-			dprintf(2, "exit\n");
+			dprintf(2, "Malloc\n");
 			ft_free_parse_list(s.p_lst);
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
-			rl_clear_history();
 			break ;
 		}
 		ft_free_parse_list(s.p_lst);

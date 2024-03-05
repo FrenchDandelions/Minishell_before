@@ -33,6 +33,7 @@
 # define TK_ENV_VAR 14
 # define BUILTIN 16
 # define NOTHING 17
+# define EXIT 777
 # define TK_END_PRIO 18
 # define TK_END 19
 # define ERR_PARS -18
@@ -79,8 +80,9 @@ typedef struct s_last_list
 
 typedef struct s_file
 {
-	char				*infile;
-	char				*outfile;
+	char				*infile[4096];
+	char				*outfile[4096];
+	char				*here_doc_file;
 	int					mode_in;
 	int					mode_out;
 
@@ -106,6 +108,8 @@ typedef struct s_struct
 	char				*file_out;
 	int					mode_in;
 	int					mode_out;
+	int					exit;
+	char				*here_doc_file;
 	char				*delim;
 	t_parse_list		*p_lst;
 	t_last_list			*l_lst;
@@ -126,7 +130,7 @@ char					*ft_gnl_strjoin(char *s1, char *s2, size_t len);
 int						parse_heredoc(t_struct *s);
 int						quote_checker(char *str);
 void					ft_free_changed_list(t_last_list *list);
-int						execute(t_struct *s, t_last_list *list);
+int						execute(t_struct *s, t_last_list *list, int depth);
 void					ft_print_list2(t_last_list *lst);
 t_last_list				*new_list(void);
 

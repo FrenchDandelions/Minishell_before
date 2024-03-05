@@ -15,9 +15,7 @@
 void	flush_array(char **tab)
 {
 	int	i;
-	int	k;
 
-	k = 0;
 	i = 0;
 	while (tab[i])
 	{
@@ -77,12 +75,13 @@ int	check_if_isatty(char *file, int token)
 		file = epur_str(file);
 		if (!file)
 			return (ERR_MALLOC);
-		fd = open(file, O_TRUNC | O_WRONLY, 0666);
+		fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0666);
 		if (fd == -1)
 		{
 			free(file);
 			return (SUCCESS);
 		}
+		printf("Here: %d\n", fd);
 		if (isatty(fd))
 			return (close(fd), free(file), IS_TTY);
 		return (close(fd), free(file), SUCCESS);
@@ -107,7 +106,7 @@ int	check_if_isatty(char *file, int token)
 		file = epur_str(file);
 		if (!file)
 			return (ERR_MALLOC);
-		fd = open(file, O_APPEND | O_WRONLY, 0666);
+		fd = open(file, O_CREAT | O_APPEND | O_WRONLY, 0666);
 		if (fd == -1)
 		{
 			free(file);
@@ -123,30 +122,38 @@ int	check_if_isatty(char *file, int token)
 int	create_new_file(t_file *f, char *file, int type)
 {
 	int	check;
+	int	i;
 
-	check = check_if_isatty(file, type);
-	if (check == IS_TTY)
-		return (SUCCESS);
-	else if (check == ERR_MALLOC)
-		return (ERR_MALLOC);
+	i = 0;
+	// check = check_if_isatty(file, type);
+	// if (check == IS_TTY)
+	// 	return (SUCCESS);
+	// else if (check == ERR_MALLOC)
+	// 	return (ERR_MALLOC);
 	check = token_redirection(type, 1);
 	if (check == 1)
 	{
-		if (f->outfile)
-			free(f->outfile);
-		f->mode_out = type;
-		f->outfile = ft_strdup(file);
-		if (!f->outfile)
+		while (f->outfile[i])
+			i++;
+		if (i == 4096)
 			return (ERR_MALLOC);
+		f->mode_out = type;
+		f->outfile[i] = ft_strdup(file);
+		if (!f->outfile[i])
+			return (ERR_MALLOC);
+		f->outfile[i + 1] = NULL;
 	}
 	else if (check == 2)
 	{
-		if (f->infile)
-			free(f->infile);
-		f->mode_in = type;
-		f->infile = ft_strdup(file);
-		if (!f->infile)
+		while (f->infile[i])
+			i++;
+		if (i == 4096)
 			return (ERR_MALLOC);
+		f->mode_in = type;
+		f->infile[i] = ft_strdup(file);
+		if (!f->infile[i])
+			return (ERR_MALLOC);
+		f->infile[i + 1] = NULL;
 	}
 	return (SUCCESS);
 }
@@ -161,27 +168,40 @@ int	is_arg(int token)
 
 void	set_files(t_file *file)
 {
-	file->infile = NULL;
-	file->outfile = NULL;
+	file->infile[0] = NULL;
+	file->outfile[0] = NULL;
 	file->mode_in = NOTHING;
 	file->mode_out = NOTHING;
 }
 
 void	flush_files(t_file *file)
 {
-	if (file->infile != NULL)
-		free(file->infile);
-	if (file->outfile != NULL)
-		free(file->outfile);
+	int	i;
+
+	i = 0;
+	while (file->infile[i] != NULL)
+	{
+		free(file->infile[i]);
+		i++;
+	}
+	i = 0;
+	while (file->outfile[i] != NULL)
+	{
+		free(file->outfile[i]);
+		i++;
+	}
 	set_files(file);
 }
 
 int	fill_cmd_tab(t_last_list **list, t_struct **s)
 {
 	int	fullness;
+	int	i;
 
-	fullness = 0;
-	// ft_print_list2(*list);
+	i = 0;
+	while ((*s)->tab[i])
+		i++;
+	fullness = i;
 	if ((*list)->token == TK_END)
 		return ((*s)->tab[fullness] = NULL, SUCCESS);
 	while ((*list)->next)
@@ -195,9 +215,18 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 			flush_array((*s)->tab);
 			return (ERR_MALLOC);
 		}
-		(*s)->tab[fullness] = ft_strdup((*list)->str);
-		if (!(*s)->tab[fullness])
-			return (flush_array((*s)->tab), ERR_MALLOC);
+		if ((*list)->str)
+		{
+			(*s)->tab[fullness] = ft_strdup((*list)->str);
+			if (!(*s)->tab[fullness])
+				return (flush_array((*s)->tab), ERR_MALLOC);
+		}
+		else
+		{
+			(*s)->tab[fullness] = ft_strdup("here_doc.txt");
+			if (!(*s)->tab[fullness])
+				return (flush_array((*s)->tab), ERR_MALLOC);
+		}
 		fullness++;
 		(*list) = (*list)->next;
 	}
@@ -236,7 +265,7 @@ static int	create(t_last_list **list)
 	return (SUCCESS);
 }
 
-int	recursive_priority(t_struct *s, t_last_list **list)
+int	recursive_priority(t_struct *s, t_last_list **list, int depth)
 {
 	t_last_list	*temp;
 	t_last_list	*head;
@@ -244,9 +273,10 @@ int	recursive_priority(t_struct *s, t_last_list **list)
 
 	prio = 1;
 	(*list) = (*list)->next;
+	// head = NULL;
 	head = (t_last_list *)malloc(sizeof(t_last_list));
 	if (!head)
-		return (ft_free_changed_list(head), ERR_MALLOC);
+		return (ft_free_changed_list(head), printf("Malloc\n"), ERR_MALLOC);
 	head->prev = NULL;
 	head->next = NULL;
 	head->str = NULL;
@@ -283,7 +313,7 @@ int	recursive_priority(t_struct *s, t_last_list **list)
 	{
 		temp->next = new_list();
 		if (!temp->next)
-			return (ERR_MALLOC);
+			return (ft_free_changed_list(head), ERR_MALLOC);
 		temp->next->prev = temp;
 		temp->next->str = NULL;
 		temp = temp->next;
@@ -298,39 +328,89 @@ int	recursive_priority(t_struct *s, t_last_list **list)
 	temp = head;
 	ft_print_list2(*list);
 	ft_print_list2(head);
-	if (execute(s, head) == ERR_MALLOC)
+	depth++;
+	if (execute(s, head, depth) == ERR_MALLOC)
 		return (ft_free_changed_list(head), ERR_MALLOC);
 	ft_free_changed_list(head);
 	return (SUCCESS);
 }
 
-void	do_exec(t_struct **s, t_file *file)
+/*here, this one,if it's exit the exit variable should be set to EXIT,
+	that's the only thing you need to worry about*/
+int	do_exec(t_struct **s, t_file *file, int stat)
 {
 	int	i;
+	int	j;
 
 	i = 0;
+	j = 0;
+	(void)stat;
+	if ((*s)->tab[i])
+	{
+		if (strcmp((*s)->tab[i], "exit") == 0)
+			return ((*s)->exit = EXIT, EXIT);
+	}
 	if ((*s)->tab[i])
 		printf("Command : %s\n", (*s)->tab[i]);
 	i++;
-	while ((*s)->tab[i])
+	if ((*s)->tab[i - 1])
 	{
-		printf("Command : %s\n", (*s)->tab[i]);
-		i++;
+		while ((*s)->tab[i])
+		{
+			printf("Command : %s\n", (*s)->tab[i]);
+			i++;
+		}
 	}
+	i = 0;
+	while (file->infile[i])
+		i++;
+	while (file->outfile[j])
+		j++;
+	if (i > 0)
+		i--;
+	if (j > 0)
+		j--;
 	printf("Infile : %s, Mode infile : %d, Outfile : %s, Mode Outfile : %d\n",
-		file->infile, file->mode_in, file->outfile, file->mode_out);
+		file->infile[i], file->mode_in, file->outfile[j], file->mode_out);
+	return (SUCCESS);
 }
 
-int	execute(t_struct *s, t_last_list *list)
+int	recursive_tab_filler(t_struct **s, t_last_list **list, t_file *file)
+{
+	if (fill_cmd_tab(&(*list), &(*s)) == ERR_MALLOC)
+		return (flush_files(file), ERR_MALLOC);
+	if (token_redirection((*list)->token, 0))
+	{
+		while ((*list)->next && (*list)->next->str
+			&& token_redirection((*list)->token, 0))
+		{
+			if (create_new_file(file, (*list)->next->str,
+					(*list)->token) == ERR_MALLOC)
+				return (flush_array((*s)->tab), flush_files(file), ERR_MALLOC);
+			(*list) = (*list)->next->next;
+		}
+	}
+	if (is_arg((*list)->token))
+		return (recursive_tab_filler(&(*s), &(*list), file));
+	return (SUCCESS);
+}
+
+/*function to fill the file struct and command tab,
+	you have to check the s->tab for the commands and the file struct passed as parameters,
+	even if there is no command, the files should be opened,
+		just fill the do_exec function*/
+int	execute(t_struct *s, t_last_list *list, int depth)
 {
 	t_file	file;
+	int		status;
 
 	set_files(&file);
 	while (list->next)
 	{
 		if (list->token == TK_PRIO)
 		{
-			if (recursive_priority(s, &list) == ERR_MALLOC)
+			status = recursive_priority(s, &list, depth);
+			if (status == ERR_MALLOC)
 				return (ERR_MALLOC);
 		}
 		else if (token_redirection(list->token, 0))
@@ -338,54 +418,62 @@ int	execute(t_struct *s, t_last_list *list)
 			while (list->next && list->next->str
 				&& token_redirection(list->token, 0))
 			{
-				if (create_new_file(&file, list->next->str,
-						list->token) == ERR_MALLOC)
+				status = create_new_file(&file, list->next->str, list->token);
+				if (status == ERR_MALLOC)
 					return (ERR_MALLOC);
 				list = list->next->next;
 			}
 		}
 		else if (is_arg(list->token))
 		{
-			if (fill_cmd_tab(&list, &s) == ERR_MALLOC)
-				return (flush_files(&file), ERR_MALLOC);
-			if (token_redirection(list->token, 0))
-			{
-				while (list->next && list->next->str
-					&& token_redirection(list->token, 0))
-				{
-					if (create_new_file(&file, list->next->str,
-							list->token) == ERR_MALLOC)
-						return (flush_array(s->tab), ERR_MALLOC);
-					list = list->next->next;
-				}
-			}
+			status = recursive_tab_filler(&s, &list, &file);
+			if (status == ERR_MALLOC)
+				return (ERR_MALLOC);
 		}
 		if (list->token == TK_PIPES || list->token == TK_END)
 		{
 			epur_commands(&s);
-			do_exec(&s, &file);
+			status = do_exec(&s, &file, 0);
+			if (status == ERR_MALLOC)
+				return (flush_files(&file), flush_array(s->tab), ERR_MALLOC);
 			flush_files(&file);
 			flush_array(s->tab);
+			if (list->token == TK_END && s->exit == EXIT && depth == 0)
+				return (EXIT);
 		}
 		else if (list->token == TK_AND)
 		{
 			printf("\n&&\n");
 			epur_commands(&s);
-			do_exec(&s, &file);
+			status = do_exec(&s, &file, 1);
+			if (status == ERR_MALLOC)
+				return (flush_files(&file), flush_array(s->tab), ERR_MALLOC);
 			flush_files(&file);
 			flush_array(s->tab);
 			if (s->err == FAILURE)
-				printf("Noooooo :(\n");
+			{
+				status = do_exec(&s, &file, 1);
+				if (status == ERR_MALLOC)
+					return (flush_files(&file), flush_array(s->tab),
+						ERR_MALLOC);
+			}
 		}
 		else if (list->token == TK_OR)
 		{
 			printf("\n||\n");
 			epur_commands(&s);
-			do_exec(&s, &file);
+			status = do_exec(&s, &file, 1);
+			if (status == ERR_MALLOC)
+				return (flush_files(&file), flush_array(s->tab), ERR_MALLOC);
 			flush_files(&file);
 			flush_array(s->tab);
 			if (s->err == WINNING)
-				printf("Noooooo2 :(\n");
+			{
+				status = do_exec(&s, &file, 1);
+				if (status == ERR_MALLOC)
+					return (flush_files(&file), flush_array(s->tab),
+						ERR_MALLOC);
+			}
 		}
 		if (list->next)
 			list = list->next;

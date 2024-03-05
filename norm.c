@@ -340,7 +340,7 @@ int	string_maker(t_struct **parse, t_last_list **list, t_parse_list **copy)
 {
 	int	size;
 
-	while ((*parse)->p_lst->next)
+	while ((*parse)->p_lst && (*parse)->p_lst->next)
 	{
 		size = 0;
 		if ((*parse)->p_lst->next)
@@ -353,6 +353,8 @@ int	string_maker(t_struct **parse, t_last_list **list, t_parse_list **copy)
 						&size)) == ERR_MALLOC)
 				return (ERR_MALLOC);
 		}
+		if ((*parse)->p_lst && !(*parse)->p_lst->next)
+			break ;
 	}
 	return (SUCCESS);
 }
