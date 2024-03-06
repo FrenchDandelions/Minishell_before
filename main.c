@@ -154,7 +154,15 @@ int	get_env(char **env, t_struct *s)
 		}
 		i++;
 	}
+	s->env[i] = NULL;
 	return (SUCCESS);
+}
+
+void	free_env(char **env)
+{
+	for (int i = 0; env[i] != NULL; i++)
+		free(env[i]);
+	free(env);
 }
 
 int	main(int argc, char **argv, char **env)
@@ -172,12 +180,14 @@ int	main(int argc, char **argv, char **env)
 	(void)argc;
 	if (get_env(env, &s) == ERR_MALLOC)
 		return (ERR_MALLOC);
+	s.err = NOTHING;
 	while (1)
 	{
 		str = readline("\033[1;34mMinishell$\033[0m ");
 		if (!str)
 		{
 			rl_clear_history();
+			free_env(s.env);
 			return (printf("Bye ;)\n"), exit(0), SUCCESS);
 		}
 		add_history((const char *)str);
@@ -241,6 +251,7 @@ int	main(int argc, char **argv, char **env)
 			free(s.str);
 			free(str);
 			rl_clear_history();
+			free_env(s.env);
 			break ;
 		}
 		ft_free_parse_list(s.p_lst);

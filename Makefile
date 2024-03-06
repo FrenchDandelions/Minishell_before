@@ -14,6 +14,7 @@ SRC_FILES = ft_get_prototype_list.c \
 			get_next_line.c \
 			line_checkers.c \
 			execute.c \
+			go_to_next_stop.c \
 
 OBJECTS = $(SRC_FILES:.c=.o)
 INCLUDE = test.h

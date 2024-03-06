@@ -136,5 +136,6 @@ int						execute(t_struct *s, t_last_list *list, int depth,
 							int pipe);
 void					ft_print_list2(t_last_list *lst);
 t_last_list				*new_list(void);
+int						go_to_next_stop(t_last_list **list);
 
 #endif

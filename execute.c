@@ -334,8 +334,8 @@ int	recursive_priority(t_struct *s, t_last_list **list, int depth, int pipe)
 		temp->str = NULL;
 	}
 	temp = head;
-	ft_print_list2(*list);
-	ft_print_list2(head);
+	// ft_print_list2(*list);
+	// ft_print_list2(head);
 	depth++;
 	if (execute(s, head, depth, pipe) == ERR_MALLOC)
 		return (ft_free_changed_list(head), ERR_MALLOC);
@@ -355,7 +355,26 @@ int	do_exec(t_struct **s, t_file *file, int stat)
 {
 	int	i;
 	int	j;
+	int	rd;
 
+	if (stat)
+	{
+		rd = rand() % 2;
+		if (rd == 0)
+		{
+			if (stat == 2)
+				(*s)->err = WINNING;
+			else
+				(*s)->err = FAILURE;
+		}
+		else
+		{
+			if (stat == 1)
+				(*s)->err = WINNING;
+			else
+				(*s)->err = FAILURE;
+		}
+	}
 	i = 0;
 	j = 0;
 	(void)stat;
@@ -447,6 +466,10 @@ int	execute(t_struct *s, t_last_list *list, int depth, int pipe)
 		}
 		if (list->token == TK_PIPES || list->token == TK_END)
 		{
+			if (list->token == TK_PIPES)
+				printf("\n|\n");
+			else
+				printf("\nEND\n");
 			epur_commands(&s);
 			status = do_exec(&s, &file, 0);
 			if (status == ERR_MALLOC)
@@ -466,29 +489,19 @@ int	execute(t_struct *s, t_last_list *list, int depth, int pipe)
 			flush_files(&file);
 			flush_array(s->tab);
 			if (s->err == FAILURE)
-			{
-				status = execute(s, list, depth, 0);
-				if (status == ERR_MALLOC)
-					return (flush_files(&file), flush_array(s->tab),
-						ERR_MALLOC);
-			}
+				go_to_next_stop(&list);
 		}
 		else if (list->token == TK_OR)
 		{
 			printf("\n||\n");
 			epur_commands(&s);
-			status = do_exec(&s, &file, 1);
+			status = do_exec(&s, &file, 2);
 			if (status == ERR_MALLOC)
 				return (flush_files(&file), flush_array(s->tab), ERR_MALLOC);
 			flush_files(&file);
 			flush_array(s->tab);
 			if (s->err == WINNING)
-			{
-				status = execute(s, list, depth, 0);
-				if (status == ERR_MALLOC)
-					return (flush_files(&file), flush_array(s->tab),
-						ERR_MALLOC);
-			}
+				go_to_next_stop(&list);
 		}
 		if (list->next)
 			list = list->next;
