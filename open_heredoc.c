@@ -25,7 +25,9 @@ int	end_heredoc(t_last_list **list, char *buf, char *str)
 	}
 	else
 	{
-		(*list)->next->str = NULL;
+		(*list)->next->str = ft_strdup("");
+		if (!(*list)->next->str)
+			return (ERR_MALLOC);
 	}
 	return (SUCCESS);
 }

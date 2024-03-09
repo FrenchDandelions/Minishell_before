@@ -1,0 +1,6 @@
+coucou
+[?2004h[1;34mMinishell$[0m nice
+[?2004l
+END
+0
+[1;34mMinishell$[0m Bye ;)

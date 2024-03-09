@@ -165,6 +165,18 @@ void	free_env(char **env)
 	free(env);
 }
 
+int	wait_pid(int *fds)
+{
+	int	status;
+
+	(void)fds;
+	close(fds[0]);
+	close(fds[1]);
+	while (errno != ECHILD)
+		wait(&status);
+	return (status);
+}
+
 int	main(int argc, char **argv, char **env)
 {
 	t_struct	s;
@@ -188,6 +200,7 @@ int	main(int argc, char **argv, char **env)
 		{
 			rl_clear_history();
 			free_env(s.env);
+			wait_pid(s.pipe);
 			return (printf("Bye ;)\n"), exit(0), SUCCESS);
 		}
 		add_history((const char *)str);
@@ -233,6 +246,12 @@ int	main(int argc, char **argv, char **env)
 		}
 		// ft_print_list2(s.l_lst);
 		s.tab[0] = NULL;
+		s.infile = NULL;
+		s.outfile = NULL;
+		s.mode_in = NOTHING;
+		s.mode_out = NOTHING;
+		s.token_in = NOTHING;
+		s.token_out = NOTHING;
 		stat = execute(&s, s.head_ll, 0, 0);
 		if (stat == ERR_PARS)
 		{

@@ -15,6 +15,12 @@ SRC_FILES = ft_get_prototype_list.c \
 			line_checkers.c \
 			execute.c \
 			go_to_next_stop.c \
+			exec.c \
+			buildins.c \
+			open_files.c \
+			parse_path.c \
+			get_files.c \
+			goodbye_quotes.c \
 
 OBJECTS = $(SRC_FILES:.c=.o)
 INCLUDE = test.h

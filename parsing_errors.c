@@ -36,6 +36,12 @@ static int	is_redirection(int token, int i)
 			|| token == TK_OUTPUT || token == TK_AND || token == TEMP_AND)
 			return (1);
 	}
+	else if (i == 2)
+	{
+		if (token == TK_INPUT || token == TK_APPEND || token == TK_DLMTR
+			|| token == TK_OUTPUT)
+			return (1);
+	}
 	else
 	{
 		if (token == TK_INPUT || token == TK_APPEND || token == TK_DLMTR
@@ -92,7 +98,7 @@ int	generate_heredoc_name(t_struct *s)
 	return (SUCCESS);
 }
 
-int	check_heredoc(t_last_list **list, int *i, t_struct *s)
+int	check_heredoc(t_last_list **list)
 {
 	int	err;
 
@@ -105,10 +111,6 @@ int	check_heredoc(t_last_list **list, int *i, t_struct *s)
 				|| (*list)->next->token == TK_SINGLE)
 			&& (*list)->token == TK_DLMTR)
 		{
-			if ((*i) == 0)
-				if (generate_heredoc_name(s) == ERR_MALLOC)
-					return (ERR_MALLOC);
-			(*i)++;
 			err = open_heredoc(&(*list));
 			(*list) = (*list)->next;
 			return (err);
@@ -121,12 +123,12 @@ int	parse_heredoc(t_struct *s)
 {
 	t_last_list	*temp;
 	int			err;
-	int			i;
 
+	(void)s;
 	temp = s->head_ll;
 	while (temp->next)
 	{
-		err = check_heredoc(&temp, &i, s);
+		err = check_heredoc(&temp);
 		if (err == ERR_PARS)
 			return (print_error("<<"));
 		else if (err == ERR_MALLOC)
@@ -159,6 +161,9 @@ int	parser(t_struct *s)
 		else if (temp->next && is_pipe(temp->token, 3)
 			&& is_pipe(temp->next->token, 4))
 			return (print_error(temp->next->str));
+		else if (temp->next && temp->token == TK_END_PRIO
+			&& is_redirection(temp->next->token, 2))
+			return (print_error(temp->str));
 		temp = temp->next;
 	}
 	return (SUCCESS);

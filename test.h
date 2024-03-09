@@ -44,19 +44,38 @@
 # define ERR_SINGLE -56
 # define ERR_DOUBLE -55
 # define TEMP_AND 20
-# define SIZE 4096
+# define SIZE 16384
 # define IS_TTY 21
 # define FAILURE -1000000
 # define WINNING 1000000
+# define ERR_FORK -200
 # define ERR_MINI_DOC "\033[0;32mMinishell: warning: mini_doc delimited by end-of-file (wanted `"
+# include <dirent.h>
+# include <errno.h>
 # include <fcntl.h>
 # include <malloc.h>
 # include <readline/history.h>
 # include <readline/readline.h>
+# include <signal.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
+# include <sys/wait.h>
 # include <unistd.h>
+
+void					sig_int(int code);
+void					sig_quit(int code);
+void					sig_init(void);
+
+typedef struct s_sig
+{
+	int					sigint;
+	int					sigquit;
+	int					exit_status;
+	pid_t				pid;
+}						t_sig;
+
+extern t_sig			g_sig;
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 1
@@ -80,13 +99,10 @@ typedef struct s_last_list
 
 typedef struct s_file
 {
-	char				*infile[SIZE];
-	char				*outfile[SIZE];
+	char				*files[SIZE];
 	char				*here_doc_file;
-	int					mode_in;
-	int					mode_out;
+	int					modes[SIZE];
 	int					token[SIZE];
-	int					limit_heredoc;
 }						t_file;
 
 typedef struct s_tree
@@ -105,19 +121,30 @@ typedef struct s_struct
 	char				*str;
 	int					err;
 	char				*tab[SIZE];
-	char				*file_in;
-	char				*file_out;
+	char				*infile;
+	char				*outfile;
 	int					mode_in;
 	int					mode_out;
+	int					token_in;
+	int					token_out;
 	int					exit;
 	char				*here_doc_file;
 	char				*delim;
 	char				**env;
+	int					pipe[2];
+	int					is_pipe;
+	int					here_doc[2];
+	pid_t				pid;
 	t_parse_list		*p_lst;
 	t_last_list			*l_lst;
 	t_last_list			*head_ll;
 	t_parse_list		*head_parse;
 	t_last_list			*temp;
+	char				**dup_env;
+	int					end;
+	int					fd_in;
+	int					fd_out;
+	int					here_doc_open;
 }						t_struct;
 
 int						ft_prototype_list(t_struct *s);
@@ -137,5 +164,23 @@ int						execute(t_struct *s, t_last_list *list, int depth,
 void					ft_print_list2(t_last_list *lst);
 t_last_list				*new_list(void);
 int						go_to_next_stop(t_last_list **list);
-
+char					*takeoff_quotes(char *str);
+char					*get_path(char *cmd, char **env, int *flag);
+int						exec(t_struct *s, t_file *file);
+void					ft_echo(t_struct *s);
+void					ft_pwd(t_struct *s);
+void					ft_cd(t_struct *s);
+void					ft_export(t_struct *s, char **env);
+void					ft_unset(t_struct *s, char **env);
+void					ft_env(t_struct *s, char **env, int fake_env);
+void					ft_exit(t_struct *s);
+int						do_files(t_file *f, t_struct *s);
+void					free_tab(char **tab);
+void					free_array(char **array);
+int						token_redirection(int token, int mode);
+int						open_output(char *s, int token, t_struct *st);
+int						open_append(char *s, int token, t_struct *st);
+int						open_input(char *s, int token, t_struct *st);
+int						open_dlmtr(char *s, int token, t_struct *st);
+char					*takeoff_quotes(char *str);
 #endif
