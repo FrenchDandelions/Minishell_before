@@ -179,12 +179,9 @@ int	exec_path(t_struct *s, int index, int fake_env)
 
 int	exec(t_struct *s, t_file *file)
 {
-	int	status;
-
-	// close(s->pipe[0]);
-	// close(s->pipe[1]);
-	if (pipe(s->pipe) == -1)
-		return (ft_dprintf(2, "pipe\n"), ERR_PIPE);
+	if (s->counter != s->count_pipes)
+		if (pipe(s->pipe) == -1)
+			return (ft_dprintf(2, "pipe\n"), ERR_PIPE);
 	s->pid = fork();
 	if (s->pid < 0)
 		return (err_fork(s->pipe, 0));
@@ -192,26 +189,26 @@ int	exec(t_struct *s, t_file *file)
 	{
 		s->dup_env = dup_array(s->env);
 		if (!s->dup_env)
-			exit(0);
+			return (ERR_MALLOC);
 		if (do_files(file, s) == ERR_PARS)
 		{
 			free_tab(s->dup_env);
-			exit(1);
+			return (ERR_PARS);
 		}
 		if (!s->tab[0])
 		{
 			free_tab(s->dup_env);
-			exit(0);
+			return (SUCCESS);
 		}
 		exec_path(s, ft_is_buildin(s->tab[0]), 1);
 	}
 	else
 	{
-		close(s->pipe[1]);
-		dup2(s->pipe[0], STDIN_FILENO);
-		close(s->pipe[0]);
-		while (errno != ECHILD)
-			wait(&status);
+		if (!s->is_first)
+			close(s->last_fd);
+		s->last_fd = s->pipe[0];
+		if (s->counter != s->count_pipes)
+			close(s->pipe[1]);
 		return (SUCCESS);
 	}
 	return (SUCCESS);

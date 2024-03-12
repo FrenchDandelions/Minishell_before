@@ -67,15 +67,7 @@ void					sig_int(int code);
 void					sig_quit(int code);
 void					sig_init(void);
 
-typedef struct s_sig
-{
-	int					sigint;
-	int					sigquit;
-	int					exit_status;
-	pid_t				pid;
-}						t_sig;
-
-extern t_sig			g_sig;
+extern int				g_sig;
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 1
@@ -145,6 +137,11 @@ typedef struct s_struct
 	int					fd_in;
 	int					fd_out;
 	int					here_doc_open;
+	int					is_first;
+	int					is_last;
+	int					last_fd;
+	int					count_pipes;
+	int					counter;
 }						t_struct;
 
 int						ft_prototype_list(t_struct *s);
@@ -183,4 +180,6 @@ int						open_append(char *s, int token, t_struct *st);
 int						open_input(char *s, int token, t_struct *st);
 int						open_dlmtr(char *s, int token, t_struct *st);
 char					*takeoff_quotes(char *str);
+void					count_pipes(t_struct *s);
+
 #endif

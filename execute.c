@@ -330,7 +330,11 @@ int	recursive_priority(t_struct *s, t_last_list **list, int depth, int pipe)
 */
 int	do_exec(t_struct **s, t_file *file, int stat)
 {
+	if (strcmp((*s)->tab[0], "exit") == 0 && (*s)->count_pipes == 0)
+		return (ft_exit(*s), 0);
 	stat = exec(*s, file);
+	(*s)->is_first = 0;
+	(*s)->counter++;
 	if (stat != SUCCESS)
 		return (stat);
 	return (SUCCESS);
@@ -376,19 +380,7 @@ int	execute(t_struct *s, t_last_list *list, int depth, int pipe)
 			if (status == ERR_MALLOC)
 				return (ERR_MALLOC);
 		}
-		else if (token_redirection(list->token, 0))
-		{
-			while (list->next && list->next->str
-				&& token_redirection(list->token, 0))
-			{
-				status = create_new_file(&file, list->next->str, list->token,
-						list->next->token);
-				if (status == ERR_MALLOC)
-					return (ERR_MALLOC);
-				list = list->next->next;
-			}
-		}
-		else if (is_arg(list->token))
+		else if (is_arg(list->token) || token_redirection(list->token, 0))
 		{
 			status = recursive_tab_filler(&s, &list, &file);
 			if (status == ERR_MALLOC)
@@ -396,14 +388,13 @@ int	execute(t_struct *s, t_last_list *list, int depth, int pipe)
 		}
 		if (list->token == TK_PIPES || list->token == TK_END)
 		{
-			if (list->token == TK_PIPES)
-				printf("\n|\n");
-			else
-				printf("\nEND\n");
 			epur_commands(&s);
 			s->is_pipe = 1;
 			if (list->token == TK_END)
+			{
 				s->end = 1;
+				s->is_last = 1;
+			}
 			status = do_exec(&s, &file, 0);
 			if (status == ERR_MALLOC)
 				return (flush_files(&file, s), flush_array(s->tab), ERR_MALLOC);

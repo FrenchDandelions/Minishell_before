@@ -12,6 +12,8 @@
 
 #include "test.h"
 
+int		g_sig;
+
 void	ft_free_parse_list(t_parse_list *list)
 {
 	t_parse_list	*current;
@@ -170,8 +172,6 @@ int	wait_pid(int *fds)
 	int	status;
 
 	(void)fds;
-	close(fds[0]);
-	close(fds[1]);
 	while (errno != ECHILD)
 		wait(&status);
 	return (status);
@@ -184,8 +184,12 @@ int	main(int argc, char **argv, char **env)
 	int			err;
 	int			err2;
 	int			stat;
+	int			status;
 
+	// char		*st2;
+	// status  = 0;
 	stat = 0;
+	g_sig = 0;
 	str = NULL;
 	s.exit = 0;
 	(void)argv;
@@ -193,15 +197,20 @@ int	main(int argc, char **argv, char **env)
 	if (get_env(env, &s) == ERR_MALLOC)
 		return (ERR_MALLOC);
 	s.err = NOTHING;
-	while (1)
+	while (1 && stat != EXIT)
 	{
-		str = readline("\033[1;34mMinishell$\033[0m ");
+		s.is_first = 1;
+		s.is_last = 0;
+		sig_init();
+		str = readline("\033[1;96mMinishell$\033[0m ");
 		if (!str)
 		{
+			// continue ;
 			rl_clear_history();
 			free_env(s.env);
 			wait_pid(s.pipe);
-			return (printf("Bye ;)\n"), exit(0), SUCCESS);
+			printf("Bye ;)\n");
+			break ;
 		}
 		add_history((const char *)str);
 		if (quote_checker(str) < SUCCESS)
@@ -252,7 +261,13 @@ int	main(int argc, char **argv, char **env)
 		s.mode_out = NOTHING;
 		s.token_in = NOTHING;
 		s.token_out = NOTHING;
+		s.count_pipes = 0;
+		s.counter = 0;
+		s.here_doc_open = 0;
+		count_pipes(&s);
 		stat = execute(&s, s.head_ll, 0, 0);
+		while (errno != ECHILD)
+			wait(&status);
 		if (stat == ERR_PARS)
 		{
 			dprintf(2, "Malloc\n");
@@ -262,17 +277,22 @@ int	main(int argc, char **argv, char **env)
 			free(str);
 			continue ;
 		}
-		else if (stat == EXIT)
+		else if (s.exit == EXIT)
 		{
-			dprintf(2, "exit\n");
+			dprintf(2, "exit, here\n");
 			ft_free_parse_list(s.p_lst);
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
 			rl_clear_history();
 			free_env(s.env);
-			break ;
+			exit(EXIT_SUCCESS);
 		}
+		// dprintf(s.fd_in, "coucou");
+		// st2 = get_next_line(0);
+		// if (!st2)
+		// 	continue ;
+		// dprintf(2, "Here?\n");
 		ft_free_parse_list(s.p_lst);
 		ft_free_changed_list(s.l_lst);
 		free(s.str);

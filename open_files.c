@@ -173,8 +173,9 @@ int	split_and_expand(char *s, int fd, t_struct *st)
 
 int	open_dlmtr(char *s, int token, t_struct *st)
 {
-	int status;
+	int	status;
 
+	dprintf(2, "Here2 : %s\n", s);
 	if (!st->here_doc_open)
 	{
 		if (pipe(st->here_doc) == -1)
@@ -189,11 +190,13 @@ int	open_dlmtr(char *s, int token, t_struct *st)
 	if (token != TK_ARG)
 	{
 		status = split_and_expand(s, st->here_doc[1], st);
+		st->here_doc_open++;
 		if (status)
 			return (close(st->here_doc[1]), status);
 		return (close(st->here_doc[1]), 0);
 	}
 	ft_dprintf(st->here_doc[1], "%s", s);
 	close(st->here_doc[1]);
+	st->here_doc_open++;
 	return (0);
 }

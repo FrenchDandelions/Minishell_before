@@ -61,10 +61,10 @@ int	open_heredoc(t_last_list **list)
 		if (!str)
 			return (dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
 					(*list)->next->str), end_heredoc(&(*list), buf, str));
-		str = ft_gnl_strjoin(str, "\n", 1);
-		if (buf && strncmp(str, (*list)->next->str,
+		if (strncmp(str, (*list)->next->str,
 				(int)strlen((*list)->next->str)) == 0)
 			return (end_heredoc(&(*list), buf, str));
+		str = ft_gnl_strjoin(str, "\n", 1);
 		if (add_to_buffer(&buf, str) == ERR_MALLOC)
 			return (ERR_MALLOC);
 		free(str);

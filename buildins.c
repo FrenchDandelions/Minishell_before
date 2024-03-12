@@ -35,11 +35,36 @@ int	find_option(char **tab)
 	i = 1;
 	while (tab[i])
 	{
-		if (ft_strchr(tab[i], '-'))
-			return (1);
+		if (ft_strchr(tab[i], '-') && is_full_of_n(tab[i]))
+			return (i);
 		i++;
 	}
 	return (0);
+}
+
+int	n_case(t_struct *s)
+{
+	int	i;
+	int	j;
+
+	i = 1;
+	j = find_option(s->tab);
+	if (j)
+	{
+		while (s->tab[i] && s->tab[i + 1])
+		{
+			if (i == j)
+				i++;
+			if (!is_full_of_n(s->tab[i]) && s->tab[i + 1] && (i + 1) != j)
+				printf("%s ", s->tab[i]);
+			else if ((i + 1) == j)
+				printf("%s", s->tab[i]);
+			i++;
+		}
+		if (i != j)
+			printf("%s", s->tab[i]);
+	}
+	return (j);
 }
 
 void	ft_echo(t_struct *s)
@@ -47,17 +72,7 @@ void	ft_echo(t_struct *s)
 	int	i;
 
 	i = 1;
-	if (find_option(s->tab))
-	{
-		while (s->tab[i] && s->tab[i + 1])
-		{
-			if (!is_full_of_n(s->tab[i]))
-				printf("%s ", s->tab[i]);
-			i++;
-		}
-		printf("%s", s->tab[i]);
-	}
-	else
+	if (!n_case(s))
 	{
 		while (s->tab[i] && s->tab[i + 1])
 		{
@@ -67,6 +82,7 @@ void	ft_echo(t_struct *s)
 		printf("%s\n", s->tab[i]);
 	}
 	free_tab(s->dup_env);
+	exit(0);
 }
 
 void	ft_pwd(t_struct *s)
@@ -74,6 +90,7 @@ void	ft_pwd(t_struct *s)
 	(void)s;
 	printf("pwd\n");
 	free_tab(s->dup_env);
+	exit(0);
 }
 
 void	ft_cd(t_struct *s)
@@ -81,6 +98,7 @@ void	ft_cd(t_struct *s)
 	(void)s;
 	printf("cd\n");
 	free_tab(s->dup_env);
+	exit(0);
 }
 
 void	ft_export(t_struct *s, char **env)
@@ -89,6 +107,7 @@ void	ft_export(t_struct *s, char **env)
 	(void)s;
 	printf("export\n");
 	free_tab(s->dup_env);
+	exit(0);
 }
 
 void	ft_unset(t_struct *s, char **env)
@@ -97,6 +116,7 @@ void	ft_unset(t_struct *s, char **env)
 	(void)s;
 	printf("unset\n");
 	free_tab(s->dup_env);
+	exit(0);
 }
 
 void	ft_env(t_struct *s, char **env, int fake_env)
@@ -122,11 +142,15 @@ void	ft_env(t_struct *s, char **env, int fake_env)
 		}
 	}
 	free_tab(s->dup_env);
+	exit(0);
 }
 
 void	ft_exit(t_struct *s)
 {
 	s->exit = EXIT;
-	free_tab(s->dup_env);
-	return ;
+	if (s->count_pipes)
+	{
+		free_tab(s->dup_env);
+		exit(0);
+	}
 }

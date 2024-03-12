@@ -21,19 +21,16 @@ void	get_files(t_file *f, t_struct *s)
 	{
 		if (token_redirection(f->modes[i], 1) == 2)
 		{
-			// s->infile = f->files[i];
 			s->token_in = f->token[i];
 			s->mode_in = f->modes[i];
 		}
 		else if (token_redirection(f->modes[i], 1) == 1)
 		{
-			// s->outfile = f->files[i];
 			s->token_out = f->token[i];
 			s->mode_out = f->modes[i];
 		}
 		i++;
 	}
-	dprintf(2, "%s\n", s->outfile);
 }
 
 int	open_out(t_file *f, t_struct *s, int i)
@@ -83,7 +80,6 @@ int	open_files(t_file *f, t_struct *s)
 	status = 0;
 	while (f->files[i])
 	{
-		dprintf(2, "Coucou ici : %s\n", f->files[i]);
 		if (f->modes[i] == TK_APPEND || f->modes[i] == TK_OUTPUT)
 		{
 			status = open_out(f, s, i);
@@ -98,7 +94,6 @@ int	open_files(t_file *f, t_struct *s)
 		}
 		i++;
 	}
-	dprintf(2, "Coucou encore : %s\n", s->outfile);
 	return (SUCCESS);
 }
 
@@ -135,6 +130,17 @@ int	do_files(t_file *f, t_struct *s)
 	s->here_doc_open = 0;
 	if (open_files(f, s) == ERR_PARS)
 		return (ERR_PARS);
+	if (!s->is_first)
+	{
+		dup2(s->last_fd, STDIN_FILENO);
+		close(s->last_fd);
+	}
+	if (s->count_pipes != s->counter)
+	{
+		dup2(s->pipe[1], STDOUT_FILENO);
+		close(s->pipe[1]);
+		close(s->pipe[0]);
+	}
 	if (s->infile)
 	{
 		s->fd_in = open_struct_file(s->infile, s->mode_in, s);
@@ -148,18 +154,6 @@ int	do_files(t_file *f, t_struct *s)
 		dup2(s->fd_out, STDOUT_FILENO);
 		close(s->fd_out);
 		free(s->outfile);
-	}
-	if (!s->end)
-	{
-		close(s->pipe[0]);
-		dup2(s->pipe[1], STDOUT_FILENO);
-		close(s->pipe[1]);
-	}
-	else
-	{
-		close(s->pipe[0]);
-		dup2(s->pipe[1], STDOUT_FILENO);
-		close(s->pipe[1]);
 	}
 	return (SUCCESS);
 }
