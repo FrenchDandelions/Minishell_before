@@ -113,6 +113,8 @@ int	open_struct_file(char *s, int mode, t_struct *st)
 	}
 	else if (mode == TK_INPUT)
 	{
+		if (st->here_doc_open)
+			close(st->here_doc[0]);
 		fd = open(s, O_RDONLY, 0644);
 		return (fd);
 	}
@@ -141,19 +143,23 @@ int	do_files(t_file *f, t_struct *s)
 		close(s->pipe[1]);
 		close(s->pipe[0]);
 	}
-	if (s->infile)
+	if (s->tab[0])
 	{
-		s->fd_in = open_struct_file(s->infile, s->mode_in, s);
-		dup2(s->fd_in, STDIN_FILENO);
-		close(s->fd_in);
-		free(s->infile);
-	}
-	if (s->outfile)
-	{
-		s->fd_out = open_struct_file(s->outfile, s->mode_out, s);
-		dup2(s->fd_out, STDOUT_FILENO);
-		close(s->fd_out);
-		free(s->outfile);
+		if (s->outfile)
+		{
+			s->fd_out = open_struct_file(s->outfile, s->mode_out, s);
+			dup2(s->fd_out, STDOUT_FILENO);
+			close(s->fd_out);
+			free(s->outfile);
+		}
+		if ((s->infile || s->here_doc_open))
+		{
+			s->fd_in = open_struct_file(s->infile, s->mode_in, s);
+			dup2(s->fd_in, STDIN_FILENO);
+			close(s->fd_in);
+			if (s->infile)
+				free(s->infile);
+		}
 	}
 	return (SUCCESS);
 }

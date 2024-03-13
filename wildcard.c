@@ -27,6 +27,11 @@ char	*do_expand(char *file, int *j)
 		return (NULL);
 	if (*j > len)
 		return (s);
+    while((j + i) <= len)
+    {
+        if(file[(*j) + i] == '\'')
+            
+    }
 	return (s);
 }
 

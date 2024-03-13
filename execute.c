@@ -330,8 +330,10 @@ int	recursive_priority(t_struct *s, t_last_list **list, int depth, int pipe)
 */
 int	do_exec(t_struct **s, t_file *file, int stat)
 {
-	if (strcmp((*s)->tab[0], "exit") == 0 && (*s)->count_pipes == 0)
-		return (ft_exit(*s), 0);
+	if ((*s)->tab[0] && ft_strcmp((*s)->tab[0], "exit") == 0
+		&& (*s)->count_pipes == 0)
+		return (ft_exit(*s), EXIT);
+	// if ((*s)->tab[0])
 	stat = exec(*s, file);
 	(*s)->is_first = 0;
 	(*s)->counter++;

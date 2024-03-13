@@ -193,12 +193,12 @@ int	exec(t_struct *s, t_file *file)
 		if (do_files(file, s) == ERR_PARS)
 		{
 			free_tab(s->dup_env);
-			return (ERR_PARS);
+			exit(0);
 		}
 		if (!s->tab[0])
 		{
 			free_tab(s->dup_env);
-			return (SUCCESS);
+			exit(0);
 		}
 		exec_path(s, ft_is_buildin(s->tab[0]), 1);
 	}

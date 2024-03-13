@@ -95,7 +95,7 @@ int	open_input(char *s, int token, t_struct *st)
 	{
 		perror(str);
 		free(str);
-		return (ERR_PARS);
+		return (-1);
 	}
 	close(fd);
 	if (st->infile)
@@ -175,7 +175,6 @@ int	open_dlmtr(char *s, int token, t_struct *st)
 {
 	int	status;
 
-	dprintf(2, "Here2 : %s\n", s);
 	if (!st->here_doc_open)
 	{
 		if (pipe(st->here_doc) == -1)

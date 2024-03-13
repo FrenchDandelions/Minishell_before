@@ -12,17 +12,21 @@
 
 #include "libft.h"
 
-void	*ft_realloc(void *ptr, size_t newsize)
+void	*ft_realloc(void *ptr, size_t newsize, size_t oldsize)
 {
 	char	*newptr;
 	size_t	cursize;
 
 	if (ptr == 0)
 		return (malloc(newsize));
-	cursize = sizeof(ptr);
+	cursize = oldsize;
 	if (newsize <= cursize)
 		return (ptr);
 	newptr = malloc(newsize);
-	ft_memcpy(ptr, newptr, cursize);
+	if (!newptr)
+		return (free(ptr), NULL);
+	ft_bzero(newptr, newsize);
+	ft_memcpy(newptr, ptr, cursize);
+	free(ptr);
 	return (newptr);
 }

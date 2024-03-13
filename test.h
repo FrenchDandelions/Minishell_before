@@ -181,5 +181,7 @@ int						open_input(char *s, int token, t_struct *st);
 int						open_dlmtr(char *s, int token, t_struct *st);
 char					*takeoff_quotes(char *str);
 void					count_pipes(t_struct *s);
+char					*ft_strnjoin(char *s1, char *s2, size_t size_s1,
+							int start);
 
 #endif

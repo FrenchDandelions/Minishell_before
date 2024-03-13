@@ -22,7 +22,7 @@ void	sig_int(int code)
 	rl_replace_line("", 0);
 	rl_on_new_line();
 	rl_redisplay();
-	// signal(code, SIG_IGN);
+	// signal(code, SIG_IGN);x
 }
 
 // void	sig_quit(int code)
