@@ -81,24 +81,21 @@ void	ft_echo(t_struct *s)
 		}
 		printf("%s\n", s->tab[i]);
 	}
-	free_tab(s->dup_env);
-	exit(0);
+	free_all(s, 0);
 }
 
 void	ft_pwd(t_struct *s)
 {
 	(void)s;
 	printf("pwd\n");
-	free_tab(s->dup_env);
-	exit(0);
+	free_all(s, 0);
 }
 
 void	ft_cd(t_struct *s)
 {
 	(void)s;
 	printf("cd\n");
-	free_tab(s->dup_env);
-	exit(0);
+	free_all(s, 0);
 }
 
 void	ft_export(t_struct *s, char **env)
@@ -106,8 +103,7 @@ void	ft_export(t_struct *s, char **env)
 	(void)env;
 	(void)s;
 	printf("export\n");
-	free_tab(s->dup_env);
-	exit(0);
+	free_all(s, 0);
 }
 
 void	ft_unset(t_struct *s, char **env)
@@ -115,8 +111,7 @@ void	ft_unset(t_struct *s, char **env)
 	(void)env;
 	(void)s;
 	printf("unset\n");
-	free_tab(s->dup_env);
-	exit(0);
+	free_all(s, 0);
 }
 
 void	ft_env(t_struct *s, char **env, int fake_env)
@@ -141,16 +136,116 @@ void	ft_env(t_struct *s, char **env, int fake_env)
 			i++;
 		}
 	}
-	free_tab(s->dup_env);
-	exit(0);
+	free_all(s, 0);
+}
+
+int	longlonglen(long long int n)
+{
+	int				i;
+	long long int	num;
+
+	i = 0;
+	num = n;
+	if (num < 0)
+		i++;
+	while (num)
+	{
+		i++;
+		num /= 10;
+	}
+	return (i);
+}
+
+int	ft_strlen_ps(char *s)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	j = 0;
+	if (s[i] == '-')
+		i++;
+	while (s[i + j])
+	{
+		if ((s[i + j] == '0' && i == 1) || (s[i + j] == '0' && i == 0))
+		{
+			while (s[i + j] == '0')
+				j++;
+			if (!s[i + j])
+			{
+				i--;
+				break ;
+			}
+		}
+		if (s[i + j])
+			i++;
+	}
+	return (i);
+}
+
+int	is_only_num(char *s)
+{
+	int	i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (!ft_isdigit(s[i]))
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+void	get_err_string(t_struct *s, int len)
+{
+	char	*str;
+	int		i;
+
+	str = calloc(sizeof(char), len);
+	if (!str)
+		free_all(s, -2);
+	i = 0;
+	while (i < len - 1)
+	{
+		str[i] = s->tab[1][i];
+		i++;
+	}
+	str[i] = '\0';
+	s->string_error = str;
+}
+
+void	set_error(t_struct *s)
+{
+	int	len;
+
+	len = (int)(ft_strlen(s->tab[1]) + 1);
+	s->exit_arg = 2;
+	s->num_err_exit = 1;
+	get_err_string(s, len);
 }
 
 void	ft_exit(t_struct *s)
 {
+	long long int	stat;
+
 	s->exit = EXIT;
 	if (s->count_pipes)
+		free_all(s, 0);
+	if (s->tab[1])
 	{
-		free_tab(s->dup_env);
-		exit(0);
+		stat = ft_atoll(s->tab[1]);
+		if ((longlonglen(stat) != ft_strlen_ps(s->tab[1]))
+			|| !is_only_num(s->tab[1]))
+			set_error(s);
+		else
+		{
+			if (stat < 0 || stat > 256)
+				s->exit_arg = stat % 256;
+			else
+				s->exit_arg = stat;
+		}
 	}
+	else
+		s->exit_arg = 0;
 }

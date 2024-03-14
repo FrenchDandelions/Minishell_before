@@ -21,7 +21,7 @@ char	*free_string(char *s1, char *s2, int i)
 	return (NULL);
 }
 
-char	*ft_strnjoin(char *s1, char *s2, size_t size_s1, int start)
+char	*ft_n(char *s1, char *s2, size_t size_s1, int start)
 {
 	char	*str;
 	size_t	i;

@@ -1,24 +1,39 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ft_realloc_test.c                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: thole <thole@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/03/13 15:51:18 by thole             #+#    #+#             */
-/*   Updated: 2024/03/13 15:51:28 by thole            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include "test.h"
 
-#include "libft/libft.h"
-#include <readline/history.h>
-#include <readline/readline.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
+int	is_quotes(int c)
+{
+	if (c == '\'' || c == '\"')
+		return (1);
+	return (0);
+}
 
-char	*ft_strnjoin(char *s1, char *s2, size_t size_s1, int start);
+char	*takeoff_quotes(char *str)
+{
+	char	*dup;
+	char	type;
+	int		i;
+	int		j;
+
+	dup = ft_calloc(sizeof(char), ft_strlen(str) + 1);
+	if (!dup)
+		return (free(str), NULL);
+	i = 0;
+	j = 0;
+	while (str[i])
+	{
+		if (is_quotes(str[i]))
+		{
+			type = str[i++];
+			while (str[i] && str[i] != type)
+				dup[j++] = str[i++];
+			if (str[i] == type)
+				i++;
+		}
+		if (str[i] && !is_quotes(str[i]))
+			dup[j++] = str[i++];
+	}
+	return (free(str), dup);
+}
 
 int	is_alnum_undescore(int c)
 {
@@ -27,7 +42,7 @@ int	is_alnum_undescore(int c)
 	return (0);
 }
 
-char	*find_in_path(char *needle, char **env)
+char	*find_in_path(char *needle, char **env, int len, t_struct *s)
 {
 	int		size;
 	int		i;
@@ -35,7 +50,11 @@ char	*find_in_path(char *needle, char **env)
 
 	size = (int)ft_strlen(needle);
 	i = 0;
-	while (env[i])
+	if (len == 1 && size == 0)
+		return (ft_strdup(""));
+	if (size == 1 && needle[0] == '?')
+		return (ft_itoa(s->exit_val));
+	while (env[i] && needle[0])
 	{
 		if (ft_strnstr(env[i], needle, size))
 		{
@@ -44,46 +63,44 @@ char	*find_in_path(char *needle, char **env)
 		}
 		i++;
 	}
-	if (size == 1)
+	if (len == 0 && size == 0)
 		return (ft_strdup("$"));
 	return (ft_strdup(""));
 }
 
-char	*expand(char *str, char **env)
+char	*expand(char *str, char **env, t_struct *s)
 {
 	char	*string;
 	char	*dup;
 	char	*dup2;
 	int		i;
 	int		len;
-	int		oldlen;
 	int		j;
 
 	dup = NULL;
 	j = 0;
 	i = 0;
-	oldlen = ft_strlen(str);
-	string = calloc(sizeof(char), (oldlen + 1));
+	string = calloc(sizeof(char), (ft_strlen(str) + 1));
 	while (str[i])
 	{
 		if (str[i] == '\'')
 		{
-			ft_sprintf(string + j, "%s", &str[i]);
+			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
 			while (str[i] != '\'')
 			{
-				ft_sprintf(string + j, "%s", &str[i]);
+				ft_sprintf(string + j, "%c", str[i]);
 				i++;
 				j++;
 			}
-			ft_sprintf(string + j, "%s", &str[i]);
+			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
 		}
 		if (str[i] == '\"')
 		{
-			ft_sprintf(string + j, "%s", &str[i]);
+			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
 			while (str[i] != '\"')
@@ -92,12 +109,39 @@ char	*expand(char *str, char **env)
 				{
 					len = 0;
 					i++;
-					while (is_alnum_undescore(str[i + len]))
+					while (str[i + len] && (is_alnum_undescore(str[i + len])
+							|| (len == 0 && str[i + len] == '?')))
 						len++;
-					dup = ft_substr(str, i, len);
-					if (!dup)
-						return (NULL);
-					dup2 = find_in_path(dup, env);
+					if (len == 0)
+					{
+						if (!str[i])
+						{
+							dup = ft_strdup("");
+							if (!dup)
+								return (free(string), NULL);
+							dup2 = find_in_path(dup, env, 1, s);
+							if (!dup2)
+								return (free(dup), free(string), NULL);
+						}
+						if (str[i] && is_quotes(str[i]))
+						{
+							dup = ft_strdup("");
+							if (!dup)
+								return (free(string), NULL);
+							dup2 = find_in_path(dup, env, 0, s);
+							if (!dup2)
+								return (free(dup), free(string), NULL);
+						}
+					}
+					else
+					{
+						dup = ft_substr(str, i, len);
+						if (!dup)
+							return (free(string), NULL);
+						dup2 = find_in_path(dup, env, 1, s);
+						if (!dup2)
+							return (free(dup), free(string), NULL);
+					}
 					string = ft_realloc(string, sizeof(char) * (ft_strlen(dup2)
 								+ ft_strlen(string) + ft_strlen(str)),
 							ft_strlen(string));
@@ -107,16 +151,16 @@ char	*expand(char *str, char **env)
 					j += (int)ft_strlen(dup2);
 					i += len;
 					free(dup);
+					free(dup2);
 				}
 				if (str[i] && str[i] != '$' && str[i] != '\"')
 				{
-					ft_sprintf(string + j, "%s", &str[i]);
+					ft_sprintf(string + j, "%c", str[i]);
 					i++;
 					j++;
 				}
-				printf("Here : %c\n", str[i]);
 			}
-			ft_sprintf(string + j, "%s", &str[i]);
+			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
 		}
@@ -124,12 +168,39 @@ char	*expand(char *str, char **env)
 		{
 			len = 0;
 			i++;
-			while (is_alnum_undescore(str[i + len]))
+			while (str[i + len] && (is_alnum_undescore(str[i + len])
+					|| (len == 0 && str[i + len] == '?')))
 				len++;
-			dup = ft_substr(str, i, len);
-			if (!dup)
-				return (NULL);
-			dup2 = find_in_path(dup, env);
+			if (len == 0)
+			{
+				if (!str[i])
+				{
+					dup = ft_strdup("");
+					if (!dup)
+						return (free(string), NULL);
+					dup2 = find_in_path(dup, env, 0, s);
+					if (!dup2)
+						return (free(dup), free(string), NULL);
+				}
+				if (str[i] && is_quotes(str[i]))
+				{
+					dup = ft_strdup("");
+					if (!dup)
+						return (free(string), NULL);
+					dup2 = find_in_path(dup, env, 1, s);
+					if (!dup2)
+						return (free(dup), free(string), NULL);
+				}
+			}
+			else
+			{
+				dup = ft_substr(str, i, len);
+				if (!dup)
+					return (free(string), NULL);
+				dup2 = find_in_path(dup, env, 1, s);
+				if (!dup2)
+					return (free(dup), free(string), NULL);
+			}
 			string = ft_realloc(string, sizeof(char) * (ft_strlen(dup2)
 						+ ft_strlen(string) + ft_strlen(str)),
 					ft_strlen(string));
@@ -139,34 +210,14 @@ char	*expand(char *str, char **env)
 			j += (int)ft_strlen(dup2);
 			i += len;
 			free(dup);
+			free(dup2);
 		}
 		if (str[i] && str[i] != '$')
 		{
-			ft_sprintf(string + j, "%s", &str[i]);
+			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
 		}
 	}
 	return (string);
-}
-
-int	main(int argc, char **argv, char **env)
-{
-	char	*str;
-	char	*str2;
-
-	(void)argc;
-	(void)argv;
-	while (1)
-	{
-		str2 = readline("Test>>> ");
-		if (!str2)
-			break ;
-		add_history(str2);
-		printf("Coucou %s\n", str2);
-		str = expand(str2, env);
-		printf("Here : %s\n", str);
-		free(str2);
-		free(str);
-	}
 }

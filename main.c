@@ -167,14 +167,22 @@ void	free_env(char **env)
 	free(env);
 }
 
-int	wait_pid(int *fds)
+int	wait_pid(t_struct *s)
 {
 	int	status;
+	int	ret;
 
-	(void)fds;
 	while (errno != ECHILD)
-		wait(&status);
-	return (status);
+	{
+		if (wait(&status) == s->pid)
+		{
+			if (WIFEXITED(status))
+				ret = WEXITSTATUS(status);
+			else
+				ret = 128 + WTERMSIG(status);
+		}
+	}
+	return (ret);
 }
 
 int	main(int argc, char **argv, char **env)
@@ -184,23 +192,23 @@ int	main(int argc, char **argv, char **env)
 	int			err;
 	int			err2;
 	int			stat;
-	int			status;
 
-	// char		*st2;
-	// status  = 0;
 	stat = 0;
 	g_sig = 0;
 	str = NULL;
 	s.exit = 0;
 	(void)argv;
 	(void)argc;
+	s.exit_arg = 0;
 	if (get_env(env, &s) == ERR_MALLOC)
 		return (ERR_MALLOC);
 	s.err = NOTHING;
+	s.exit_val = 0;
 	while (1 && stat != EXIT)
 	{
 		s.is_first = 1;
 		s.is_last = 0;
+		s.num_err_exit = 0;
 		sig_init();
 		str = readline("\033[1;96mMinishell$\033[0m ");
 		if (!str)
@@ -208,21 +216,21 @@ int	main(int argc, char **argv, char **env)
 			// continue ;
 			rl_clear_history();
 			free_env(s.env);
-			wait_pid(s.pipe);
-			printf("Bye ;)\n");
+			ft_dprintf(2, "\033[1;95mexit\n\033[0m");
+			s.exit_val = 0;
 			break ;
 		}
 		add_history((const char *)str);
 		if (quote_checker(str) < SUCCESS)
 		{
-			printf("Error\n");
+			printf("%s", ERR_QUOTES);
 			free(str);
 			continue ;
 		}
 		if (check_parenthesis(str) == ERR_PARS)
 		{
 			free(str);
-			printf("Error2\n");
+			printf("%s", ERR_PARENTHESIS);
 			continue ;
 		}
 		s.str = strdup(str);
@@ -234,23 +242,24 @@ int	main(int argc, char **argv, char **env)
 		s.head_ll = s.l_lst;
 		s.p_lst = s.head_parse;
 		s.temp = s.head_ll;
+		ft_free_parse_list(s.p_lst);
 		err = parser(&s);
 		err2 = parse_heredoc(&s);
 		if (err2 == ERR_MALLOC || err == ERR_MALLOC)
 		{
 			dprintf(STDERR_FILENO, "ERR_MALLOC");
-			ft_free_parse_list(s.p_lst);
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
+			s.exit_val = -2;
 			continue ;
 		}
-		if (err == ERR_PARS || err == ERR_MALLOC)
+		if (err == ERR_PARS || err2 == ERR_PARS)
 		{
-			ft_free_parse_list(s.p_lst);
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
+			s.exit_val = 2;
 			continue ;
 		}
 		// ft_print_list2(s.l_lst);
@@ -266,37 +275,37 @@ int	main(int argc, char **argv, char **env)
 		s.here_doc_open = 0;
 		count_pipes(&s);
 		stat = execute(&s, s.head_ll, 0, 0);
-		while (errno != ECHILD)
-			wait(&status);
+		if (s.exit != EXIT)
+			s.exit_val = wait_pid(&s);
 		if (stat == ERR_PARS)
 		{
-			dprintf(2, "Malloc\n");
-			ft_free_parse_list(s.p_lst);
+			ft_dprintf(2, "Malloc\n");
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
+			s.exit_val = -2;
 			continue ;
 		}
 		else if (s.exit == EXIT)
 		{
-			dprintf(2, "exit, here\n");
-			ft_free_parse_list(s.p_lst);
+			ft_dprintf(2, "\033[1;95mexit\n\033[0m");
+			if (s.num_err_exit)
+			{
+				ft_dprintf(2, "%s%s%s", ERR_X1, s.string_error, ERR_X2);
+				free(s.string_error);
+			}
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
 			rl_clear_history();
 			free_env(s.env);
-			exit(EXIT_SUCCESS);
+			if (s.exit_arg)
+				exit(s.exit_arg);
+			exit(s.exit_val);
 		}
-		// dprintf(s.fd_in, "coucou");
-		// st2 = get_next_line(0);
-		// if (!st2)
-		// 	continue ;
-		// dprintf(2, "Here?\n");
-		ft_free_parse_list(s.p_lst);
 		ft_free_changed_list(s.l_lst);
 		free(s.str);
 		free(str);
 	}
-	return (0);
+	return (s.exit_val);
 }

@@ -1,111 +1,223 @@
+#include "test.h"
 
+int	is_quotes(int c)
+{
+	if (c == '\'' || c == '\"')
+		return (1);
+	return (0);
+}
 
-// void	free_parse(void)
-// {
-// 	ft_free_parse_list(s()->p.s.p_lst);
-// 	ft_free_changed_list(s()->p.s.l_lst);
-// 	free(s()->e.line);
-// 	free(s()->p.s.line);
-// }
+char	*takeoff_quotes(char *str)
+{
+	char	*dup;
+	char	type;
+	int		i;
+	int		j;
 
-// int	error_checkers(char *str)
-// {
-// 	dprintf(2, "%s", str);
-// 	free(s()->e.line);
-// 	return (CONTINUE);
-// }
-// int	free_and_send_err(char *str)
-// {
-// 	ft_free_parse_list(s()->p.s.p_lst);
-// 	return (error_checkers(str));
-// }
+	dup = ft_calloc(sizeof(char), ft_strlen(str) + 1);
+	if (!dup)
+		return (free(str), NULL);
+	i = 0;
+	j = 0;
+	while (str[i])
+	{
+		if (is_quotes(str[i]))
+		{
+			type = str[i++];
+			while (str[i] && str[i] != type)
+				dup[j++] = str[i++];
+			if (str[i] == type)
+				i++;
+		}
+		if (str[i] && !is_quotes(str[i]))
+			dup[j++] = str[i++];
+	}
+	return (free(str), dup);
+}
 
-// int	set_heads_and_parse(void)
-// {
-// 	s()->p.s.head_ll = s()->p.s.l_lst;
-// 	s()->p.s.p_lst = s()->p.s.head_parse;
-// 	s()->p.s.temp = s()->p.s.head_ll;
-// 	s()->p.s.err3 = parser(&s);
-// 	if (s()->p.s.err3 != ERR_MALLOC && s()->p.s.err3 != ERR_PARS)
-// 		s()->p.s.err2 = parse_heredoc(&s);
-// 	if (s()->p.s.err2 == ERR_MALLOC || s()->p.s.err3 == ERR_MALLOC)
-// 	{
-// 		dprintf(STDERR_FILENO, "ERR_MALLOC");
-// 		free_parse();
-// 		return (CONTINUE);
-// 	}
-// 	if (s()->p.s.err3 == ERR_PARS || s()->p.s.err2 == ERR_PARS)
-// 	{
-// 		free_parse();
-// 		return (CONTINUE);
-// 	}
-// 	s()->p.s.tab[0] = NULL;
-// 	return (SUCCESS);
-// }
+int	is_alnum_undescore(int c)
+{
+	if (ft_isalnum(c) || c == '_')
+		return (1);
+	return (0);
+}
 
-// int	process(void)
-// {
-// 	s()->p.s.stat = execute(&s, s.head_ll, 0, 0);
-// 	if (s()->p.s.stat == ERR_PARS)
-// 	{
-// 		dprintf(2, "Malloc\n");
-// 		free_parse();
-// 		return (CONTINUE);
-// 	}
-// 	else if (s()->p.s.stat == EXIT)
-// 	{
-// 		dprintf(2, "exit\n");
-// 		free_parse();
-// 		return (BREAK);
-// 	}
-// 	free_parse();
-// 	return (SUCCESS);
-// }
+char	*find_in_path(char *needle, char **env, int len, t_struct *s)
+{
+	int		size;
+	int		i;
+	char	*str;
 
-// int	ft_parsing(void)
-// {
-// 	if (quote_checker(s()->e.line) < SUCCESS)
-// 		return (error_checkers("Minishell: error: unclosed quotes\n"));
-// 	if (check_parenthesis(s()->e.line) == ERR_PARS)
-// 		return (error_checkers("Minishell: error: unclosed parenthesis\n"));
-// 	s()->p.s.line = strdup(s()->e.line);
-// 	s()->p.s.err = 0;
-// 	if (ft_prototype_list(&s()->p.s) == ERR_MALLOC)
-// 		return (error_checkers("Malloc failed"));
-// 	s()->p.s.head_parse = s()->p.s.p_lst;
-// 	if (ft_change_list(&s()->p.s) == ERR_MALLOC)
-// 		return ();
-// 	s()->p.s.global_err = set_heads_and_parse();
-// 	if (s()->p.s.global_err != SUCCESS)
-// 		return (s()->p.s.global_err);
-// 	return (process());
-// }
+	size = (int)ft_strlen(needle);
+	i = 0;
+	if (len == 1 && size == 0)
+		return (ft_strdup(""));
+	if (size == 1 && needle[0] == '?')
+		return (ft_itoa(s->exit_val));
+	while (env[i] && needle[0])
+	{
+		if (ft_strnstr(env[i], needle, size))
+		{
+			str = ft_strdup(env[i] + 1 + size);
+			return (str);
+		}
+		i++;
+	}
+	if (len == 0 && size == 0)
+		return (ft_strdup("$"));
+	return (ft_strdup(""));
+}
 
-// void	ft_minishell(void)
-// {
-// 	printf("%s\n", ft_get_shell()->argv[0]);
-// 	// ft_buildin_load();
-// 	s()->tabenv = ft_get_envp(s()->env);
-// 	s()->e.pwd = s()->tabenv[ENVP_PWD];
-// 	s()->e.env = ft_splitcpy(s()->env);
-// 	if (s()->tabenv)
-// 	{
-// 		while (!s()->e.exit)
-// 		{
-// 			s()->e.line = readline("\033[1;34mMinishell$\033[0m ");
-// 			if (!s()->e.line)
-// 			{
-// 				rl_clear_history();
-// 				printf("Bye ;)\n");
-// 				break ;
-// 			}
-// 			add_history(s()->e.line);
-// 			s()->p.s.status = ft_parsing();
-// 			if (s()->p.s.status == CONTINUE)
-// 				continue ;
-// 			else
-// 				break ;
-// 		}
-// 	}
-// 	ft_free_shell();
-// }
+char	*expand(char *str, char **env, t_struct *s)
+{
+	char	*string;
+	char	*dup;
+	char	*dup2;
+	int		i;
+	int		len;
+	int		j;
+
+	dup = NULL;
+	j = 0;
+	i = 0;
+	string = calloc(sizeof(char), (ft_strlen(str) + 1));
+	while (str[i])
+	{
+		if (str[i] == '\'')
+		{
+			ft_sprintf(string + j, "%c", str[i]);
+			i++;
+			j++;
+			while (str[i] != '\'')
+			{
+				ft_sprintf(string + j, "%c", str[i]);
+				i++;
+				j++;
+			}
+			ft_sprintf(string + j, "%c", str[i]);
+			i++;
+			j++;
+		}
+		if (str[i] == '\"')
+		{
+			ft_sprintf(string + j, "%c", str[i]);
+			i++;
+			j++;
+			while (str[i] != '\"')
+			{
+				if (str[i] == '$')
+				{
+					len = 0;
+					i++;
+					while (str[i + len] && (is_alnum_undescore(str[i + len])
+							|| (len == 0 && str[i + len] == '?')))
+						len++;
+					if (len == 0)
+					{
+						if (!str[i])
+						{
+							dup = ft_strdup("");
+							if (!dup)
+								return (free(string), NULL);
+							dup2 = find_in_path(dup, env, 1, s);
+							if (!dup2)
+								return (free(dup), free(string), NULL);
+						}
+						if (str[i] && is_quotes(str[i]))
+						{
+							dup = ft_strdup("");
+							if (!dup)
+								return (free(string), NULL);
+							dup2 = find_in_path(dup, env, 0, s);
+							if (!dup2)
+								return (free(dup), free(string), NULL);
+						}
+					}
+					else
+					{
+						dup = ft_substr(str, i, len);
+						if (!dup)
+							return (free(string), NULL);
+						dup2 = find_in_path(dup, env, 1, s);
+						if (!dup2)
+							return (free(dup), free(string), NULL);
+					}
+					string = ft_realloc(string, sizeof(char) * (ft_strlen(dup2)
+								+ ft_strlen(string) + ft_strlen(str)),
+							ft_strlen(string));
+					if (!string)
+						return (NULL);
+					ft_sprintf(string + j, "%s", dup2);
+					j += (int)ft_strlen(dup2);
+					i += len;
+					free(dup);
+					free(dup2);
+				}
+				if (str[i] && str[i] != '$' && str[i] != '\"')
+				{
+					ft_sprintf(string + j, "%c", str[i]);
+					i++;
+					j++;
+				}
+			}
+			ft_sprintf(string + j, "%c", str[i]);
+			i++;
+			j++;
+		}
+		if (str[i] == '$')
+		{
+			len = 0;
+			i++;
+			while (str[i + len] && (is_alnum_undescore(str[i + len])
+					|| (len == 0 && str[i + len] == '?')))
+				len++;
+			if (len == 0)
+			{
+				if (!str[i])
+				{
+					dup = ft_strdup("");
+					if (!dup)
+						return (free(string), NULL);
+					dup2 = find_in_path(dup, env, 0, s);
+					if (!dup2)
+						return (free(dup), free(string), NULL);
+				}
+				if (str[i] && is_quotes(str[i]))
+				{
+					dup = ft_strdup("");
+					if (!dup)
+						return (free(string), NULL);
+					dup2 = find_in_path(dup, env, 1, s);
+					if (!dup2)
+						return (free(dup), free(string), NULL);
+				}
+			}
+			else
+			{
+				dup = ft_substr(str, i, len);
+				if (!dup)
+					return (free(string), NULL);
+				dup2 = find_in_path(dup, env, 1, s);
+				if (!dup2)
+					return (free(dup), free(string), NULL);
+			}
+			string = ft_realloc(string, sizeof(char) * (ft_strlen(dup2)
+						+ ft_strlen(string) + ft_strlen(str)),
+					ft_strlen(string));
+			if (!string)
+				return (NULL);
+			ft_sprintf(string + j, "%s", dup2);
+			j += (int)ft_strlen(dup2);
+			i += len;
+			free(dup);
+			free(dup2);
+		}
+		if (str[i] && str[i] != '$')
+		{
+			ft_sprintf(string + j, "%c", str[i]);
+			i++;
+			j++;
+		}
+	}
+	return (string);
+}

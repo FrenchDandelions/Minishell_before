@@ -32,11 +32,10 @@ void	exit_error(char *str)
 	exit(1);
 }
 
-void	exit_error_array(char *str, char **array)
+void	exit_error_array(char *str, t_struct *s)
 {
 	ft_dprintf(2, "%s", str);
-	free_array(array);
-	exit(1);
+	free_all(s, 1);
 }
 
 int	err_fork(int *pipe, int check)
@@ -46,12 +45,12 @@ int	err_fork(int *pipe, int check)
 		close(pipe[0]);
 		close(pipe[1]);
 		ft_dprintf(2, "fork\n");
-		return (ERR_FORK);
+		return (-1);
 	}
 	else if (check == 1)
 	{
 		ft_dprintf(2, "fork\n");
-		return (ERR_FORK);
+		return (-1);
 	}
 	return (SUCCESS);
 }
@@ -139,23 +138,22 @@ void	exec_normal(t_struct *s, char **env)
 	if (!s->tab[0])
 	{
 		ft_dprintf(2, "%s", s->tab[0]);
-		exit_error_array(": command not found\n", s->dup_env);
+		exit_error_array(": command not found\n", s);
 	}
 	path = get_path(s->tab[0], env, &i);
 	if (path == NULL)
-		exit_error_array("malloc\n", s->dup_env);
+		exit_error_array("malloc\n", s);
 	if (execve(path, s->tab, env) == -1)
 	{
 		if (errno == EACCES)
 		{
 			perror(s->tab[0]);
-			free_tab(s->dup_env);
-			exit(126);
+			free_all(s, 126);
 		}
 		ft_dprintf(2, "%s: command not found\n", s->tab[0]);
-		free_tab(s->dup_env);
-		exit(1);
+		free_all(s, 127);
 	}
+	free_all(s, 0);
 }
 
 int	exec_path(t_struct *s, int index, int fake_env)
@@ -181,7 +179,7 @@ int	exec(t_struct *s, t_file *file)
 {
 	if (s->counter != s->count_pipes)
 		if (pipe(s->pipe) == -1)
-			return (ft_dprintf(2, "pipe\n"), ERR_PIPE);
+			return (ft_dprintf(2, "pipe\n"), -1);
 	s->pid = fork();
 	if (s->pid < 0)
 		return (err_fork(s->pipe, 0));
@@ -190,15 +188,13 @@ int	exec(t_struct *s, t_file *file)
 		s->dup_env = dup_array(s->env);
 		if (!s->dup_env)
 			return (ERR_MALLOC);
-		if (do_files(file, s) == ERR_PARS)
-		{
-			free_tab(s->dup_env);
-			exit(0);
-		}
+		if (do_files(file, s))
+			free_all(s, 1);
 		if (!s->tab[0])
 		{
-			free_tab(s->dup_env);
-			exit(0);
+			if (s->count_pipes && s->here_doc_open)
+				close(s->here_doc[0]);
+			free_all(s, 0);
 		}
 		exec_path(s, ft_is_buildin(s->tab[0]), 1);
 	}

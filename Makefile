@@ -20,9 +20,10 @@ SRC_FILES = ft_get_prototype_list.c \
 			open_files.c \
 			parse_path.c \
 			get_files.c \
-			goodbye_quotes.c \
 			count_pipes.c \
 			signals.c \
+			free.c \
+			expand_dollars.c \
 
 OBJECTS = $(SRC_FILES:.c=.o)
 INCLUDE = test.h

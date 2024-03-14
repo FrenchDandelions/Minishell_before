@@ -94,7 +94,7 @@ int	open_files(t_file *f, t_struct *s)
 		}
 		i++;
 	}
-	return (SUCCESS);
+	return (0);
 }
 
 int	open_struct_file(char *s, int mode, t_struct *st)
@@ -130,14 +130,14 @@ int	do_files(t_file *f, t_struct *s)
 {
 	get_files(f, s);
 	s->here_doc_open = 0;
-	if (open_files(f, s) == ERR_PARS)
-		return (ERR_PARS);
-	if (!s->is_first)
+	if (open_files(f, s))
+		return (-1);
+	if (!s->is_first && s->count_pipes)
 	{
 		dup2(s->last_fd, STDIN_FILENO);
 		close(s->last_fd);
 	}
-	if (s->count_pipes != s->counter)
+	if (s->count_pipes != s->counter && s->count_pipes)
 	{
 		dup2(s->pipe[1], STDOUT_FILENO);
 		close(s->pipe[1]);
@@ -151,6 +151,7 @@ int	do_files(t_file *f, t_struct *s)
 			dup2(s->fd_out, STDOUT_FILENO);
 			close(s->fd_out);
 			free(s->outfile);
+			s->outfile = NULL;
 		}
 		if ((s->infile || s->here_doc_open))
 		{
@@ -158,8 +159,11 @@ int	do_files(t_file *f, t_struct *s)
 			dup2(s->fd_in, STDIN_FILENO);
 			close(s->fd_in);
 			if (s->infile)
+			{
 				free(s->infile);
+				s->infile = NULL;
+			}
 		}
 	}
-	return (SUCCESS);
+	return (0);
 }

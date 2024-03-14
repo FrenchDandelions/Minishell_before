@@ -64,9 +64,11 @@ static int	is_special(int token)
 int	print_error(char *str)
 {
 	if (str)
-		printf("Minishell: syntax error near unexpected token '%s'\n", str);
+		printf("%sMinishell: syntax error near unexpected token '%s'\n%s", RED,
+			str, RESET);
 	else
-		printf("Minishell: syntax error near unexpected token 'newline'\n");
+		printf("%sMinishell: syntax error near unexpected token 'newline'\n%s",
+			RED, RESET);
 	return (ERR_PARS);
 }
 
@@ -138,6 +140,20 @@ int	parse_heredoc(t_struct *s)
 	return (SUCCESS);
 }
 
+int	print_error2(char *str)
+{
+	printf("%sMinishell: forbidden token '%s'\n%s", RED, str, RESET);
+	return (ERR_PARS);
+}
+
+int	is_forbidden(int token)
+{
+	if (token == TK_AND || token == TK_OR || token == TK_PRIO
+		|| token == TK_END_PRIO)
+		return (1);
+	return (0);
+}
+
 int	parser(t_struct *s)
 {
 	t_last_list	*temp;
@@ -147,6 +163,8 @@ int	parser(t_struct *s)
 	{
 		if (!temp->prev && is_pipe(temp->token, 0))
 			return (print_error(temp->str));
+		else if (is_forbidden(temp->token))
+			return (print_error2(temp->str));
 		else if (temp->prev && (is_pipe(temp->prev->token, 2)
 				&& temp->token == TK_PRIO))
 			return (print_error(temp->str));

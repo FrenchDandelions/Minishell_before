@@ -49,6 +49,12 @@
 # define FAILURE -1000000
 # define WINNING 1000000
 # define ERR_FORK -200
+# define RED "\033[1;31m"
+# define RESET "\033[0m"
+# define ERR_PARENTHESIS "\033[1;31mMinishell: error: unclosed parenthesis\n\033[0m"
+# define ERR_QUOTES "\033[1;31mMinishell: error: unclosed quotes\n\033[0m"
+# define ERR_X1 "\033[1;95mMinishell: exit: "
+# define ERR_X2 ": numeric argument required\n\033[0m"
 # define ERR_MINI_DOC "\033[0;32mMinishell: warning: mini_doc delimited by end-of-file (wanted `"
 # include <dirent.h>
 # include <errno.h>
@@ -142,6 +148,11 @@ typedef struct s_struct
 	int					last_fd;
 	int					count_pipes;
 	int					counter;
+	int					exit_val;
+	t_file				*file;
+	long long int		exit_arg;
+	int					num_err_exit;
+	char				*string_error;
 }						t_struct;
 
 int						ft_prototype_list(t_struct *s);
@@ -161,7 +172,6 @@ int						execute(t_struct *s, t_last_list *list, int depth,
 void					ft_print_list2(t_last_list *lst);
 t_last_list				*new_list(void);
 int						go_to_next_stop(t_last_list **list);
-char					*takeoff_quotes(char *str);
 char					*get_path(char *cmd, char **env, int *flag);
 int						exec(t_struct *s, t_file *file);
 void					ft_echo(t_struct *s);
@@ -183,5 +193,10 @@ char					*takeoff_quotes(char *str);
 void					count_pipes(t_struct *s);
 char					*ft_strnjoin(char *s1, char *s2, size_t size_s1,
 							int start);
+void					free_env(char **env);
+void					free_all(t_struct *s, int ex);
+char					*expand(char *str, char **env, t_struct *s);
+int						epur_files(t_file *f, t_struct **s, int i);
+void					flush_files(t_file *file, t_struct *s);
 
 #endif
