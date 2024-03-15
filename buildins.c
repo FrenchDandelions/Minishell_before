@@ -33,6 +33,8 @@ int	find_option(char **tab)
 	int	i;
 
 	i = 1;
+	if (!tab[0][0])
+		i++;
 	while (tab[i])
 	{
 		if (ft_strchr(tab[i], '-') && is_full_of_n(tab[i]))
@@ -48,6 +50,8 @@ int	n_case(t_struct *s)
 	int	j;
 
 	i = 1;
+	if (!s->tab[0][0])
+		i++;
 	j = find_option(s->tab);
 	if (j)
 	{
@@ -72,7 +76,11 @@ void	ft_echo(t_struct *s)
 	int	i;
 
 	i = 1;
-	if (!n_case(s))
+	if (!s->tab[1])
+		printf("\n");
+	if (!s->tab[0][0])
+		i++;
+	else if (!n_case(s))
 	{
 		while (s->tab[i] && s->tab[i + 1])
 		{
@@ -86,8 +94,12 @@ void	ft_echo(t_struct *s)
 
 void	ft_pwd(t_struct *s)
 {
-	(void)s;
-	printf("pwd\n");
+	char	str[PATH_MAX];
+
+	if (getcwd(str, PATH_MAX))
+		printf("%s\n", str);
+	else
+		perror("getcwd");
 	free_all(s, 0);
 }
 
@@ -180,6 +192,8 @@ int	ft_strlen_ps(char *s)
 		if (s[i + j])
 			i++;
 	}
+	if (s[0] == '+')
+		i--;
 	return (i);
 }
 
@@ -188,6 +202,8 @@ int	is_only_num(char *s)
 	int	i;
 
 	i = 0;
+	if (s[i] == '-' || s[i] == '+')
+		i++;
 	while (s[i])
 	{
 		if (!ft_isdigit(s[i]))
@@ -240,7 +256,12 @@ void	ft_exit(t_struct *s)
 			set_error(s);
 		else
 		{
-			if (stat < 0 || stat > 256)
+			if (s->tab[2])
+			{
+				s->bad_exit = 1;
+				s->exit_val = 1;
+			}
+			else if (stat < 0 || stat > 256)
 				s->exit_arg = stat % 256;
 			else
 				s->exit_arg = stat;

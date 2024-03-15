@@ -77,8 +77,12 @@ static void	check_all_path(char **all, int *flag)
 	return ;
 }
 
-static char	*last_check(char **all_path, char *cmd, int *flag)
+static char	*last_check(char **all_path, char *cmd, int *flag, char *path)
 {
+	if (ft_strcmp2(path, "0") == 1)
+		free(path);
+	if (all_path)
+		free_array(all_path);
 	if (!all_path || *flag == 1)
 		return (NULL);
 	return (cmd);
@@ -106,9 +110,8 @@ char	*get_path(char *cmd, char **env, int *flag)
 			return (free(path), free_array(all_path), str);
 		i++;
 	}
-	if (ft_strcmp2(path, "0") == 1)
-		free(path);
-	if (all_path)
-		free_array(all_path);
-	return (last_check(all_path, cmd, flag));
+	if (all_path && !all_path[i])
+		return (ft_dprintf(2, "%s: : command not found\n", cmd), (*flag) = 2,
+			cmd);
+	return (last_check(all_path, cmd, flag, path));
 }

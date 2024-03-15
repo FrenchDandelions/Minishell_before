@@ -185,6 +185,34 @@ int	wait_pid(t_struct *s)
 	return (ret);
 }
 
+int	is_token(int token)
+{
+	if (token == TK_AND || token == TK_OR || token == TK_DLMTR
+		|| token == TK_SINGLE || token == TK_PIPES || token == TK_PRIO
+		|| token == TK_END_PRIO || token == TK_APPEND || token == TK_ARG
+		|| token == TK_AND || token == TK_AND || token == TK_WILD
+		|| token == TK_DOUBLE || token == TK_OUTPUT || token == TK_INPUT
+		|| token == TK_EXPAND || token == TK_ENV_VAR)
+		return (1);
+	return (0);
+}
+
+int	check_list(t_last_list *list)
+{
+	t_last_list	*temp;
+	int			i;
+
+	temp = list;
+	i = 0;
+	while (temp->next)
+	{
+		if (is_token(temp->token))
+			i++;
+		temp = temp->next;
+	}
+	return (i);
+}
+
 int	main(int argc, char **argv, char **env)
 {
 	t_struct	s;
@@ -197,6 +225,8 @@ int	main(int argc, char **argv, char **env)
 	g_sig = 0;
 	str = NULL;
 	s.exit = 0;
+	if (isatty(STDIN_FILENO) == -1)
+		return (ft_dprintf(STDERR_FILENO, "Wrong stdin\n"), EXIT_FAILURE);
 	(void)argv;
 	(void)argc;
 	s.exit_arg = 0;
@@ -204,8 +234,10 @@ int	main(int argc, char **argv, char **env)
 		return (ERR_MALLOC);
 	s.err = NOTHING;
 	s.exit_val = 0;
+	s.bad_exit = 0;
 	while (1 && stat != EXIT)
 	{
+		s.bad_exit = 0;
 		s.is_first = 1;
 		s.is_last = 0;
 		s.num_err_exit = 0;
@@ -273,6 +305,13 @@ int	main(int argc, char **argv, char **env)
 		s.count_pipes = 0;
 		s.counter = 0;
 		s.here_doc_open = 0;
+		if (!check_list(s.head_ll))
+		{
+			ft_free_changed_list(s.l_lst);
+			free(s.str);
+			free(str);
+			continue ;
+		}
 		count_pipes(&s);
 		stat = execute(&s, s.head_ll, 0, 0);
 		if (s.exit != EXIT)
@@ -289,6 +328,22 @@ int	main(int argc, char **argv, char **env)
 		else if (s.exit == EXIT)
 		{
 			ft_dprintf(2, "\033[1;95mexit\n\033[0m");
+			if (s.bad_exit)
+			{
+				s.num_err_exit = 0;
+				if (s.string_error)
+				{
+					free(s.string_error);
+					s.string_error = NULL;
+				}
+				ft_dprintf(2, "%sMinishell: exit: too many arguments%s\n", PURP,
+					RESET);
+				ft_free_changed_list(s.l_lst);
+				free(s.str);
+				free(str);
+				stat = 0;
+				continue ;
+			}
 			if (s.num_err_exit)
 			{
 				ft_dprintf(2, "%s%s%s", ERR_X1, s.string_error, ERR_X2);
@@ -299,9 +354,10 @@ int	main(int argc, char **argv, char **env)
 			free(str);
 			rl_clear_history();
 			free_env(s.env);
-			if (s.exit_arg)
+			if (s.exit_arg && !s.bad_exit)
 				exit(s.exit_arg);
-			exit(s.exit_val);
+			if (!s.bad_exit)
+				exit(s.exit_val);
 		}
 		ft_free_changed_list(s.l_lst);
 		free(s.str);

@@ -51,6 +51,7 @@
 # define ERR_FORK -200
 # define RED "\033[1;31m"
 # define RESET "\033[0m"
+# define PURP "\033[1;95m"
 # define ERR_PARENTHESIS "\033[1;31mMinishell: error: unclosed parenthesis\n\033[0m"
 # define ERR_QUOTES "\033[1;31mMinishell: error: unclosed quotes\n\033[0m"
 # define ERR_X1 "\033[1;95mMinishell: exit: "
@@ -59,6 +60,7 @@
 # include <dirent.h>
 # include <errno.h>
 # include <fcntl.h>
+# include <linux/limits.h>
 # include <malloc.h>
 # include <readline/history.h>
 # include <readline/readline.h>
@@ -153,6 +155,7 @@ typedef struct s_struct
 	long long int		exit_arg;
 	int					num_err_exit;
 	char				*string_error;
+	int					bad_exit;
 }						t_struct;
 
 int						ft_prototype_list(t_struct *s);

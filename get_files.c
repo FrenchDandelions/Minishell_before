@@ -143,7 +143,7 @@ int	do_files(t_file *f, t_struct *s)
 		close(s->pipe[1]);
 		close(s->pipe[0]);
 	}
-	if (s->tab[0])
+	if (s->tab[0] && s->tab[0][0])
 	{
 		if (s->outfile)
 		{

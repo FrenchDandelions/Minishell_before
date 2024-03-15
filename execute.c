@@ -358,6 +358,7 @@ int	do_exec(t_struct **s, t_file *file, int stat)
 		&& (*s)->count_pipes == 0)
 		return (ft_exit(*s), EXIT);
 	// if ((*s)->tab[0])
+	printf("here : %s %s %s\n", (*s)->tab[0], (*s)->tab[1], (*s)->tab[2]);
 	stat = exec(*s, file);
 	(*s)->is_first = 0;
 	(*s)->counter++;

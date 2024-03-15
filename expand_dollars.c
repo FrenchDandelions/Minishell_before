@@ -78,6 +78,7 @@ char	*expand(char *str, char **env, t_struct *s)
 	int		j;
 
 	dup = NULL;
+	dup2 = NULL;
 	j = 0;
 	i = 0;
 	string = calloc(sizeof(char), (ft_strlen(str) + 1));
@@ -88,22 +89,25 @@ char	*expand(char *str, char **env, t_struct *s)
 			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
-			while (str[i] != '\'')
+			while (str[i] && str[i] != '\'')
 			{
 				ft_sprintf(string + j, "%c", str[i]);
 				i++;
 				j++;
 			}
-			ft_sprintf(string + j, "%c", str[i]);
-			i++;
-			j++;
+			if (str[i])
+			{
+				ft_sprintf(string + j, "%c", str[i]);
+				i++;
+				j++;
+			}
 		}
 		if (str[i] == '\"')
 		{
 			ft_sprintf(string + j, "%c", str[i]);
 			i++;
 			j++;
-			while (str[i] != '\"')
+			while (str[i] && str[i] != '\"')
 			{
 				if (str[i] == '$')
 				{
@@ -123,7 +127,7 @@ char	*expand(char *str, char **env, t_struct *s)
 							if (!dup2)
 								return (free(dup), free(string), NULL);
 						}
-						if (str[i] && is_quotes(str[i]))
+						if (str[i])
 						{
 							dup = ft_strdup("");
 							if (!dup)
@@ -151,7 +155,9 @@ char	*expand(char *str, char **env, t_struct *s)
 					j += (int)ft_strlen(dup2);
 					i += len;
 					free(dup);
+					dup = NULL;
 					free(dup2);
+					dup2 = NULL;
 				}
 				if (str[i] && str[i] != '$' && str[i] != '\"')
 				{
@@ -160,9 +166,12 @@ char	*expand(char *str, char **env, t_struct *s)
 					j++;
 				}
 			}
-			ft_sprintf(string + j, "%c", str[i]);
-			i++;
-			j++;
+			if (str[i])
+			{
+				ft_sprintf(string + j, "%c", str[i]);
+				i++;
+				j++;
+			}
 		}
 		if (str[i] == '$')
 		{
@@ -210,7 +219,9 @@ char	*expand(char *str, char **env, t_struct *s)
 			j += (int)ft_strlen(dup2);
 			i += len;
 			free(dup);
+			dup = NULL;
 			free(dup2);
+			dup2 = NULL;
 		}
 		if (str[i] && str[i] != '$')
 		{

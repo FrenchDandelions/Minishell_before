@@ -32,10 +32,19 @@ void	exit_error(char *str)
 	exit(1);
 }
 
-void	exit_error_array(char *str, t_struct *s)
+void	exit_error_array(char *str, t_struct *s, char *s1, int index)
 {
+	if (index == 1 && !s1)
+		ft_dprintf(2, "%s", s->tab[0]);
+	else if (index == 1 && s1 && !s1[0])
+	{
+		ft_dprintf(2, "%s", s1);
+		free(s1);
+	}
 	ft_dprintf(2, "%s", str);
-	free_all(s, 1);
+	if (index == 1)
+		free_all(s, 127);
+	free_all(s, -2);
 }
 
 int	err_fork(int *pipe, int check)
@@ -111,22 +120,41 @@ int	ft_is_buildin(char *s)
 	return (0);
 }
 
-void	exec_buildin(t_struct *s, char **env, int i)
+void	exec_buildin(t_struct *s, char **env, int i, char *cmd)
 {
-	if (ft_strncmp("echo", s->tab[0], 5) == 0)
+	if (ft_strncmp("echo", cmd, 5) == 0)
 		ft_echo(s);
-	else if (ft_strncmp("export", s->tab[0], 7) == 0)
+	else if (ft_strncmp("export", cmd, 7) == 0)
 		ft_export(s, env);
-	else if (ft_strncmp("cd", s->tab[0], 3) == 0)
+	else if (ft_strncmp("cd", cmd, 3) == 0)
 		ft_cd(s);
-	else if (ft_strncmp("pwd", s->tab[0], 4) == 0)
+	else if (ft_strncmp("pwd", cmd, 4) == 0)
 		ft_pwd(s);
-	else if (ft_strncmp("unset", s->tab[0], 6) == 0)
+	else if (ft_strncmp("unset", cmd, 6) == 0)
 		ft_unset(s, env);
-	else if (ft_strncmp("env", s->tab[0], 4) == 0)
+	else if (ft_strncmp("env", cmd, 4) == 0)
 		ft_env(s, env, i);
-	else if (ft_strncmp("exit", s->tab[0], 5) == 0)
+	else if (ft_strncmp("exit", cmd, 5) == 0)
 		ft_exit(s);
+}
+
+void	handle_errno(t_struct *s)
+{
+	int	err;
+
+	err = errno;
+	if (err == EACCES)
+	{
+		perror(s->tab[0]);
+		errno = err;
+		free_all(s, 126);
+	}
+	if (err == ENOENT)
+	{
+		perror(s->tab[0]);
+		errno = err;
+		free_all(s, 127);
+	}
 }
 
 void	exec_normal(t_struct *s, char **env)
@@ -135,21 +163,18 @@ void	exec_normal(t_struct *s, char **env)
 	int		i;
 
 	i = 0;
-	if (!s->tab[0])
-	{
-		ft_dprintf(2, "%s", s->tab[0]);
-		exit_error_array(": command not found\n", s);
-	}
+	if (!s->tab[0] || !s->tab[0][0])
+		exit_error_array(": command not found\n", s, NULL, 1);
 	path = get_path(s->tab[0], env, &i);
 	if (path == NULL)
-		exit_error_array("malloc\n", s);
+		exit_error_array("malloc\n", s, path, 0);
+	if (i == 2)
+		exit_error_array("", s, path, 1);
+	if (!path[0])
+		exit_error_array(": command not found\n", s, path, 1);
 	if (execve(path, s->tab, env) == -1)
 	{
-		if (errno == EACCES)
-		{
-			perror(s->tab[0]);
-			free_all(s, 126);
-		}
+		handle_errno(s);
 		ft_dprintf(2, "%s: command not found\n", s->tab[0]);
 		free_all(s, 127);
 	}
@@ -158,17 +183,23 @@ void	exec_normal(t_struct *s, char **env)
 
 int	exec_path(t_struct *s, int index, int fake_env)
 {
+	char	*cmd;
+
+	if (s->tab[0][0])
+		cmd = s->tab[0];
+	else
+		cmd = s->tab[1];
 	if (fake_env)
 	{
 		if (index == 1)
-			exec_buildin(s, s->dup_env, fake_env);
+			exec_buildin(s, s->dup_env, fake_env, cmd);
 		else
 			exec_normal(s, s->dup_env);
 	}
 	else
 	{
 		if (index == 1)
-			exec_buildin(s, s->env, fake_env);
+			exec_buildin(s, s->env, fake_env, cmd);
 		else
 			exec_normal(s, s->env);
 	}
@@ -190,13 +221,21 @@ int	exec(t_struct *s, t_file *file)
 			return (ERR_MALLOC);
 		if (do_files(file, s))
 			free_all(s, 1);
-		if (!s->tab[0])
+		if (!s->tab[0] || (!s->tab[0][0] && !s->tab[1]))
 		{
 			if (s->count_pipes && s->here_doc_open)
 				close(s->here_doc[0]);
 			free_all(s, 0);
 		}
-		exec_path(s, ft_is_buildin(s->tab[0]), 1);
+		if (s->tab[0][0])
+		{
+			exec_path(s, ft_is_buildin(s->tab[0]), 1);
+		}
+		else
+		{
+			printf("here : %s %s\n", s->tab[1], s->tab[2]);
+			exec_path(s, ft_is_buildin(s->tab[1]), 1);
+		}
 	}
 	else
 	{
