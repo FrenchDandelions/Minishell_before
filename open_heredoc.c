@@ -12,6 +12,8 @@
 
 #include "test.h"
 
+// extern int	g_sig;
+
 int	end_heredoc(t_last_list **list, char *buf, char *str)
 {
 	free(str);
@@ -49,15 +51,25 @@ int	add_to_buffer(char **buf, char *str)
 	return (SUCCESS);
 }
 
+// void	heredoc_sig(int code)
+// {
+// 	(void)code;
+// 	g_sig = 130;
+// 	printf("\n");
+// }
+
 int	open_heredoc(t_last_list **list)
 {
 	char	*str;
 	char	*buf;
 
 	buf = NULL;
+	// sigaction(SIGQUIT, SA_RESETHAND, )
+	// signal(SIGQUIT, &heredoc_sig);
 	while (1)
 	{
-		str = readline("\033[38;5;220mmini_doc>\033[0m ");
+		// sigaction(SIGQUIT, );
+		str = readline(PROMPT_HD);
 		if (!str)
 			return (dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
 					(*list)->next->str), end_heredoc(&(*list), buf, str));

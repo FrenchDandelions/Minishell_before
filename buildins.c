@@ -126,7 +126,7 @@ char	*get_color(int i)
 	return (PURP2);
 }
 
-void	sort_and_print_env(char **env, int i, int j)
+int	sort_and_print_env(char **env, int i, int j)
 {
 	char	*temp;
 
@@ -151,6 +151,126 @@ void	sort_and_print_env(char **env, int i, int j)
 		printf("%s%s\n%s", get_color(i), env[i], RESET);
 		i++;
 	}
+	return (SUCCESS);
+}
+
+int		export_check_value(t_struct *s, int i);
+
+int	printf_and_exit_export(t_struct *s, int i)
+{
+	ft_dprintf(2, "%sMinishell: export: '%s': not a valid identifier\n", RED,
+		s->tab[i], RESET);
+	s->exit_val = 1;
+	if (s->tab[i + 1])
+		return (export_check_value(s, i + 1));
+	return (SUCCESS);
+}
+
+int	export_value(t_struct *s, int i, int j)
+{
+	char	*str;
+
+	str = ft_strdup(s->tab[i]);
+	if (!str)
+	{
+		ft_dprintf(2, "Malloc env export\n");
+		free_all(s, -2);
+	}
+	free(s->env[j]);
+	s->env[j] = str;
+	s->exit_val = 0;
+	return (SUCCESS);
+}
+
+int	new_value(t_struct *s, int i, int j)
+{
+	if (j == s->size_env)
+	{
+		s->env = ft_realloc_tab(s->env, sizeof(char *) * (s->size_env + 2),
+				sizeof(char *) * s->size_env);
+		if (!s->env)
+		{
+			ft_dprintf(2, "Malloc env export\n");
+			free_all(s, -2);
+		}
+		s->size_env += 2;
+	}
+	s->env[j] = ft_strdup(s->tab[i]);
+	if (!s->env[j])
+	{
+		ft_dprintf(2, "Malloc env\n");
+		free_all(s, -2);
+	}
+	if (s->tab[i + 1])
+		return (export_check_value(s, i + 1));
+	return (SUCCESS);
+}
+
+int	check_if_is_in_env(char *env_line, char *var)
+{
+	int	i;
+	int	j;
+
+	j = 0;
+	i = 0;
+	while (env_line[i] && var[j] && env_line[i] != '=' && var[j] != '='
+		&& env_line[i] == var[j])
+	{
+		i++;
+		j++;
+	}
+	if (env_line[i] == '=' && var[j] == '=')
+		return (1);
+	return (0);
+}
+
+int	loop_export(t_struct *s, int i, int *j)
+{
+	while (s->env[(*j)])
+	{
+		if (check_if_is_in_env(s->env[(*j)], s->tab[i]))
+		{
+			if (export_value(s, i, (*j)) == ERR_MALLOC)
+				free_all(s, -2);
+			if (s->tab[i + 1])
+				return (export_check_value(s, i + 1));
+			return (SUCCESS);
+		}
+		(*j)++;
+	}
+	return (SUCCESS);
+}
+
+int	export_check_value(t_struct *s, int i)
+{
+	int	j;
+	int	k;
+
+	j = 0;
+	k = 0;
+	while (s->tab[i][k] && is_alnum_undescore(s->tab[i][k])
+		&& !ft_isdigit(s->tab[i][0]))
+		k++;
+	if (k == 0 || (s->tab[i][k] && s->tab[i][k] != '='))
+		return (printf_and_exit_export(s, i));
+	if (!s->tab[i][k] && !s->tab[i + 1])
+		return (SUCCESS);
+	else if (!s->tab[i][k] && s->tab[i + 1])
+		return (export_check_value(s, i + 1));
+	if (loop_export(s, i, &j) == ERR_MALLOC)
+		return (ERR_MALLOC);
+	if (!s->env[j])
+		return (new_value(s, i, j));
+	return (SUCCESS);
+}
+
+int	ft_export_notchild(t_struct *s, char **env)
+{
+	(void)env;
+	s->exported = 1;
+	if (!s->tab[1])
+		return (sort_and_print_env(s->env, 0, 0));
+	return (export_check_value(s, 1));
 }
 
 void	ft_export(t_struct *s, char **env)
@@ -159,15 +279,7 @@ void	ft_export(t_struct *s, char **env)
 	if (!s->tab[1])
 		sort_and_print_env(s->env, 0, 0);
 	else
-		printf("export\n");
-	free_all(s, 0);
-}
-
-void	ft_unset(t_struct *s, char **env)
-{
-	(void)env;
-	(void)s;
-	printf("unset\n");
+		export_check_value(s, 1);
 	free_all(s, 0);
 }
 
@@ -177,21 +289,11 @@ void	ft_env(t_struct *s, char **env, int fake_env)
 
 	i = 0;
 	(void)env;
-	if (fake_env)
+	(void)fake_env;
+	while (s->env[i])
 	{
-		while (s->dup_env[i])
-		{
-			printf("%s\n", s->dup_env[i]);
-			i++;
-		}
-	}
-	else
-	{
-		while (s->env[i])
-		{
-			printf("%s\n", s->env[i]);
-			i++;
-		}
+		printf("%s\n", s->env[i]);
+		i++;
 	}
 	free_all(s, 0);
 }
@@ -286,6 +388,12 @@ void	set_error(t_struct *s)
 	get_err_string(s, len);
 }
 
+void	set_val(t_struct *s)
+{
+	s->bad_exit = 1;
+	s->exit_val = 1;
+}
+
 void	ft_exit(t_struct *s)
 {
 	long long int	stat;
@@ -302,10 +410,7 @@ void	ft_exit(t_struct *s)
 		else
 		{
 			if (s->tab[2])
-			{
-				s->bad_exit = 1;
-				s->exit_val = 1;
-			}
+				set_val(s);
 			else if (stat < 0 || stat > 256)
 				s->exit_arg = stat % 256;
 			else

@@ -132,6 +132,20 @@ int	check_parenthesis(char *str)
 	return (SUCCESS);
 }
 
+void	free_env(char **env)
+{
+	int	i;
+
+	i = 0;
+	while (env[i])
+	{
+		free(env[i]);
+		env[i] = NULL;
+		i++;
+	}
+	free(env);
+	env = NULL;
+}
 int	get_env(char **env, t_struct *s)
 {
 	int	i;
@@ -147,30 +161,12 @@ int	get_env(char **env, t_struct *s)
 	{
 		s->env[i] = ft_strdup(env[i]);
 		if (!s->env[i])
-		{
-			i--;
-			if (i < 0)
-			{
-				free(s->env);
-				break ;
-			}
-			for (; i != 0; i--)
-				free(s->env[i]);
-			free(s->env);
-			return (ERR_MALLOC);
-		}
+			return (free_env(s->env), ERR_MALLOC);
 		i++;
 	}
 	s->env[i] = NULL;
 	s->size_env = i;
 	return (SUCCESS);
-}
-
-void	free_env(char **env)
-{
-	for (int i = 0; env[i] != NULL; i++)
-		free(env[i]);
-	free(env);
 }
 
 int	wait_pid(t_struct *s)
@@ -235,19 +231,26 @@ int	main(int argc, char **argv, char **env)
 	stat = 0;
 	g_sig = 0;
 	str = NULL;
-	if (isatty(STDIN_FILENO) == -1)
-		return (ft_dprintf(STDERR_FILENO, "Wrong stdin\n"), EXIT_FAILURE);
+	// if (isatty(STDIN_FILENO) == 0)
+	// 	return (ft_dprintf(STDERR_FILENO, "Wrong STDIN\n"), EXIT_FAILURE);
 	(void)argv;
 	(void)argc;
+	if (!env[0])
+		return (ft_dprintf(STDERR_FILENO, "No env detected\n"), 1);
 	s.exit_arg = 0;
 	if (get_env(env, &s) == ERR_MALLOC)
-		return (ERR_MALLOC);
+		return (ft_dprintf(2, "Malloc\n"), -2);
+	s.dup_env = dup_array(s.env);
+	if (!s.dup_env)
+		return (ft_dprintf(2, "Malloc\n"), -2);
 	s.err = NOTHING;
 	s.exit_val = 0;
 	s.bad_exit = 0;
 	while (1 && stat != EXIT)
 	{
 		s.exit = 0;
+		s.exported = 0;
+		s.unsetted = 0;
 		s.bad_exit = 0;
 		s.is_first = 1;
 		s.is_last = 0;
@@ -258,12 +261,12 @@ int	main(int argc, char **argv, char **env)
 			s.exit_val = 130;
 			g_sig = 0;
 		}
-		str = readline("\033[1;96mMinishell$\033[0m ");
+		str = readline(PROMPT);
 		if (!str)
 		{
-			// continue ;
 			rl_clear_history();
 			free_env(s.env);
+			free_env(s.dup_env);
 			ft_dprintf(2, "\033[1;95mexit\n\033[0m");
 			s.exit_val = 0;
 			break ;
@@ -281,7 +284,14 @@ int	main(int argc, char **argv, char **env)
 			printf("%s", ERR_PARENTHESIS);
 			continue ;
 		}
-		s.str = strdup(str);
+		s.str = ft_strdup(str);
+		if (!s.str)
+		{
+			ft_dprintf(2, "Malloc\n");
+			free(str);
+			s.exit_val = -2;
+			continue ;
+		}
 		s.err = 0;
 		if (ft_prototype_list(&s) == ERR_MALLOC)
 		{
@@ -344,7 +354,7 @@ int	main(int argc, char **argv, char **env)
 		}
 		count_pipes(&s);
 		stat = execute(&s, s.head_ll, 0, 0);
-		if (s.exit != EXIT)
+		if (stat != EXIT && stat != NORMAL)
 			s.exit_val = wait_pid(&s);
 		if (stat == ERR_PARS)
 		{
@@ -384,6 +394,7 @@ int	main(int argc, char **argv, char **env)
 			free(str);
 			rl_clear_history();
 			free_env(s.env);
+			free_env(s.dup_env);
 			if (s.exit_arg && !s.bad_exit)
 				exit(s.exit_arg);
 			if (!s.bad_exit)

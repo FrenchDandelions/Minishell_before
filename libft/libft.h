@@ -44,6 +44,8 @@ char				*ft_substr(char const *s, unsigned int start, size_t len);
 char				*ft_itoa(int n);
 char				*ft_strtrim(char const *s1, char const *set);
 void				*ft_realloc(void *ptr, size_t newsize, size_t oldsize);
+char				**ft_realloc_tab(char **ptr, size_t newsize,
+						size_t oldsize);
 void				ft_bzero(void *s, size_t n);
 void				ft_putchar_fd(char c, int fd);
 void				ft_putstr_fd(char *s, int fd);

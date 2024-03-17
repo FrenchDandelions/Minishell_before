@@ -37,12 +37,12 @@ void	exit_error(char *str)
 void	exit_error_array(char *str, t_struct *s, char *s1, int index)
 {
 	if (index == 1 && !s1)
-		ft_dprintf(2, "%s", s->tab[0]);
+		ft_putstr_fd(s->tab[0], STDERR_FILENO);
 	else if (index == 1 && s1 && !s1[0])
-		ft_dprintf(2, "%s", s1);
+		ft_putstr_fd(s1, STDERR_FILENO);
 	// if (s1)
 	// 	free(s1);
-	ft_dprintf(2, "%s", str);
+	ft_putendl_fd(str, STDERR_FILENO);
 	if (index == 1)
 		free_all(s, 127);
 	free_all(s, -2);
@@ -222,9 +222,6 @@ int	exec(t_struct *s, t_file *file)
 	else if (!s->pid)
 	{
 		sig_child();
-		s->dup_env = dup_array(s->env);
-		if (!s->dup_env)
-			return (ERR_MALLOC);
 		if (do_files(file, s))
 			free_all(s, 1);
 		if (!s->tab[0])

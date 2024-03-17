@@ -24,6 +24,7 @@ SRC_FILES = ft_get_prototype_list.c \
 			signals.c \
 			free.c \
 			expand_dollars.c \
+			ft_unset.c \
 
 OBJECTS = $(SRC_FILES:.c=.o)
 INCLUDE = test.h

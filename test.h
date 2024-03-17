@@ -49,15 +49,18 @@
 # define FAILURE -1000000
 # define WINNING 1000000
 # define ERR_FORK -200
-# define RED "\033[6;31m"
+# define NORMAL 888
+# define RED "\033[1;31m"
 # define RESET "\033[0m"
 # define PURP "\033[1;95m"
-# define PURP2 "\033[6;35m"
-# define ORANGE "\033[6;91m"
-# define LIGHTB "\033[6;36m"
-# define BLUE "\033[6;94m"
-# define GREEN "\033[6;92m"
-# define YELLOW "\033[6;93m"
+# define PURP2 "\033[1;35m"
+# define ORANGE "\033[1;91m"
+# define LIGHTB "\033[1;36m"
+# define BLUE "\033[1;94m"
+# define GREEN "\033[1;92m"
+# define YELLOW "\033[1;93m"
+# define PROMPT "\001\033[1;96m\002Minishell$ \001\033[0m\002"
+# define PROMPT_HD "\001\033[38;5;220m\002mini_doc> \001\033[0m\002"
 # define ERR_PARENTHESIS "\033[1;31mMinishell: error: unclosed parenthesis\n\033[0m"
 # define ERR_QUOTES "\033[1;31mMinishell: error: unclosed quotes\n\033[0m"
 # define ERR_X1 "\033[1;95mMinishell: exit: "
@@ -163,6 +166,8 @@ typedef struct s_struct
 	char				*string_error;
 	int					bad_exit;
 	int					size_env;
+	int					exported;
+	int					unsetted;
 }						t_struct;
 
 int						ft_prototype_list(t_struct *s);
@@ -188,6 +193,7 @@ void					ft_echo(t_struct *s);
 void					ft_pwd(t_struct *s);
 void					ft_cd(t_struct *s);
 void					ft_export(t_struct *s, char **env);
+int						ft_export_notchild(t_struct *s, char **env);
 void					ft_unset(t_struct *s, char **env);
 void					ft_env(t_struct *s, char **env, int fake_env);
 void					ft_exit(t_struct *s);
@@ -209,5 +215,7 @@ char					*expand(char *str, char **env, t_struct *s);
 int						epur_files(t_file *f, t_struct **s, int i);
 void					flush_files(t_file *file, t_struct *s);
 void					sig_child(void);
+int						is_alnum_undescore(int c);
+char					**dup_array(char **tab);
 
 #endif

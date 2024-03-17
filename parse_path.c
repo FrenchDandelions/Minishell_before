@@ -39,7 +39,7 @@ static char	*find_path(char **env, char *s)
 		i++;
 	j = 0;
 	if (env[i] == NULL)
-		return ("0");
+		return (ft_strdup("0"));
 	while (env[i][j] != '=')
 		j++;
 	path = (char *)malloc(sizeof(char) * (ft_strlen(env[i]) - j + 1));
@@ -88,6 +88,28 @@ static char	*last_check(char **all_path, char *cmd, int *flag, char *path)
 	return (cmd);
 }
 
+char	*not_found(char *cmd, char **all_path, char *path, int *flag)
+{
+	if (path)
+		free(path);
+	if (all_path)
+		free_array(all_path);
+	(*flag) = 2;
+	ft_putstr_fd("Minishell: ", STDERR_FILENO);
+	ft_putstr_fd(cmd, STDERR_FILENO);
+	ft_putstr_fd(": command not found", STDERR_FILENO);
+	return (cmd);
+}
+
+char	*return_cmd(char *path, char **all_path, char *str)
+{
+	if (path)
+		free(path);
+	if (all_path)
+		free_array(all_path);
+	return (str);
+}
+
 char	*get_path(char *cmd, char **env, int *flag)
 {
 	char	*path;
@@ -107,11 +129,10 @@ char	*get_path(char *cmd, char **env, int *flag)
 	{
 		str = check_access(all_path[i], cmd, flag);
 		if (str != NULL)
-			return (free(path), free_array(all_path), str);
+			return (return_cmd(path, all_path, str));
 		i++;
 	}
 	if (all_path && !all_path[i])
-		return (ft_dprintf(2, "%s: : command not found\n", cmd), (*flag) = 2,
-			free_array(all_path), free(path), cmd);
+		return (not_found(cmd, all_path, path, &(*flag)));
 	return (last_check(all_path, cmd, flag, path));
 }

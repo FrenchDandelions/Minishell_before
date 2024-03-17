@@ -117,7 +117,11 @@ char	*expand(char *str, char **env, t_struct *s)
 					i++;
 					while (str[i + len] && (is_alnum_undescore(str[i + len])
 							|| (len == 0 && str[i + len] == '?')))
+					{
+						if (len == 1 && str[i + len - 1] == '?')
+							break ;
 						len++;
+					}
 					if (len == 0)
 					{
 						if (!str[i])
@@ -181,7 +185,11 @@ char	*expand(char *str, char **env, t_struct *s)
 			i++;
 			while (str[i + len] && (is_alnum_undescore(str[i + len])
 					|| (len == 0 && str[i + len] == '?')))
+			{
+				if (len == 1 && str[i + len - 1] == '?')
+					break ;
 				len++;
+			}
 			if (len == 0)
 			{
 				if (!str[i])

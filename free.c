@@ -25,8 +25,10 @@ void	free_all(t_struct *s, int ex)
 {
 	if (s->tab)
 		free_tab(s->tab);
-	free_env(s->env);
-	free_env(s->dup_env);
+	if (s->env)
+		free_env(s->env);
+	if (s->dup_env)
+		free_env(s->dup_env);
 	if (s->infile)
 		free(s->infile);
 	if (s->outfile)
@@ -40,5 +42,6 @@ void	free_all(t_struct *s, int ex)
 		close(s->pipe[0]);
 		close(s->pipe[1]);
 	}
+	rl_clear_history();
 	exit(ex);
 }

@@ -201,6 +201,28 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 // 	return (SUCCESS);
 // }
 
+int	check_buildin(t_struct *s)
+{
+	if (ft_strcmp(s->tab[0], "exit") == 0)
+		return (0);
+	else if (ft_strcmp(s->tab[0], "export") == 0)
+		return (0);
+	else if (ft_strcmp(s->tab[0], "unset") == 0)
+		return (0);
+	return (1);
+}
+
+int	execute_buildin_normal(t_struct *s)
+{
+	if (ft_strcmp(s->tab[0], "exit") == 0)
+		return (ft_exit(s), EXIT);
+	else if (ft_strcmp(s->tab[0], "export") == 0)
+		return (ft_export_notchild(s, s->dup_env), NORMAL);
+	else if (ft_strcmp(s->tab[0], "unset") == 0)
+		return (ft_unset(s, s->dup_env), NORMAL);
+	return (SUCCESS);
+}
+
 /*here, this one,if it's exit the exit variable should be set to EXIT,
 	that's the only thing you need to worry about,
 	also stat is kinda useless but it's because i don't get
@@ -211,9 +233,8 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 */
 int	do_exec(t_struct **s, t_file *file, int stat)
 {
-	if ((*s)->tab[0] && ft_strcmp((*s)->tab[0], "exit") == 0
-		&& (*s)->count_pipes == 0)
-		return (ft_exit(*s), EXIT);
+	if ((*s)->tab[0] && check_buildin(*s) == 0 && (*s)->count_pipes == 0)
+		return (execute_buildin_normal(*s));
 	// if ((*s)->tab[0])
 	stat = exec(*s, file);
 	(*s)->is_first = 0;
