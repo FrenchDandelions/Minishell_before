@@ -30,8 +30,22 @@ void	sig_int(int code)
 // 	signal(code, SIG_IGN);
 // }
 
+void	handle_child(int code)
+{
+	if (code == SIGQUIT)
+		g_sig = 131;
+	else
+		g_sig = 130;
+}
+
 void	sig_init(void)
 {
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, &sig_int);
+}
+
+void	sig_child(void)
+{
+	signal(SIGINT, &handle_child);
+	signal(SIGQUIT, &handle_child);
 }

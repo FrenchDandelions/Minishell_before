@@ -81,7 +81,9 @@ char	*expand(char *str, char **env, t_struct *s)
 	dup2 = NULL;
 	j = 0;
 	i = 0;
-	string = calloc(sizeof(char), (ft_strlen(str) + 1));
+	string = ft_calloc(sizeof(char), (ft_strlen(str) + 1));
+	if (!string)
+		return (NULL);
 	while (str[i])
 	{
 		if (str[i] == '\'')

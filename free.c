@@ -23,8 +23,8 @@ void	free_stack_tab(char **tab)
 
 void	free_all(t_struct *s, int ex)
 {
-	if (s->tab[0])
-		free_stack_tab(s->tab);
+	if (s->tab)
+		free_tab(s->tab);
 	free_env(s->env);
 	free_env(s->dup_env);
 	if (s->infile)
@@ -32,7 +32,7 @@ void	free_all(t_struct *s, int ex)
 	if (s->outfile)
 		free(s->outfile);
 	free(s->str);
-	if (s->file->files[0])
+	if (s->file->files)
 		flush_files(s->file, s);
 	ft_free_changed_list(s->head_ll);
 	if (s->count_pipes)

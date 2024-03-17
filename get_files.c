@@ -17,7 +17,7 @@ void	get_files(t_file *f, t_struct *s)
 	int	i;
 
 	i = 0;
-	while (f->files[i])
+	while (f->files && f->files[i])
 	{
 		if (token_redirection(f->modes[i], 1) == 2)
 		{
@@ -128,10 +128,13 @@ int	open_struct_file(char *s, int mode, t_struct *st)
 
 int	do_files(t_file *f, t_struct *s)
 {
-	get_files(f, s);
-	s->here_doc_open = 0;
-	if (open_files(f, s))
-		return (-1);
+	if (f->files)
+	{
+		get_files(f, s);
+		s->here_doc_open = 0;
+		if (open_files(f, s))
+			return (-1);
+	}
 	if (!s->is_first && s->count_pipes)
 	{
 		dup2(s->last_fd, STDIN_FILENO);
@@ -143,7 +146,7 @@ int	do_files(t_file *f, t_struct *s)
 		close(s->pipe[1]);
 		close(s->pipe[0]);
 	}
-	if (s->tab[0] && s->tab[0][0])
+	if (s->tab && s->tab[0])
 	{
 		if (s->outfile)
 		{
@@ -164,6 +167,11 @@ int	do_files(t_file *f, t_struct *s)
 				s->infile = NULL;
 			}
 		}
+	}
+	else
+	{
+		if (s->here_doc_open)
+			close(s->here_doc[0]);
 	}
 	return (0);
 }

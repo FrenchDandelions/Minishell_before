@@ -12,6 +12,8 @@
 
 #include "test.h"
 
+extern int	g_sig;
+
 void	free_array(char **array)
 {
 	int	i;
@@ -37,10 +39,9 @@ void	exit_error_array(char *str, t_struct *s, char *s1, int index)
 	if (index == 1 && !s1)
 		ft_dprintf(2, "%s", s->tab[0]);
 	else if (index == 1 && s1 && !s1[0])
-	{
 		ft_dprintf(2, "%s", s1);
-		free(s1);
-	}
+	// if (s1)
+	// 	free(s1);
 	ft_dprintf(2, "%s", str);
 	if (index == 1)
 		free_all(s, 127);
@@ -69,7 +70,7 @@ void	free_tab(char **tab)
 	int	i;
 
 	i = 0;
-	while (tab[i])
+	while (tab && tab[i])
 	{
 		free(tab[i]);
 		i++;
@@ -178,6 +179,10 @@ void	exec_normal(t_struct *s, char **env)
 		ft_dprintf(2, "%s: command not found\n", s->tab[0]);
 		free_all(s, 127);
 	}
+	if (g_sig == 130)
+		free_all(s, 130);
+	else if (g_sig == 131)
+		free_all(s, 131);
 	free_all(s, 0);
 }
 
@@ -216,26 +221,20 @@ int	exec(t_struct *s, t_file *file)
 		return (err_fork(s->pipe, 0));
 	else if (!s->pid)
 	{
+		sig_child();
 		s->dup_env = dup_array(s->env);
 		if (!s->dup_env)
 			return (ERR_MALLOC);
 		if (do_files(file, s))
 			free_all(s, 1);
-		if (!s->tab[0] || (!s->tab[0][0] && !s->tab[1]))
+		if (!s->tab[0])
 		{
 			if (s->count_pipes && s->here_doc_open)
 				close(s->here_doc[0]);
 			free_all(s, 0);
 		}
-		if (s->tab[0][0])
-		{
+		if (s->tab[0])
 			exec_path(s, ft_is_buildin(s->tab[0]), 1);
-		}
-		else
-		{
-			printf("here : %s %s\n", s->tab[1], s->tab[2]);
-			exec_path(s, ft_is_buildin(s->tab[1]), 1);
-		}
 	}
 	else
 	{

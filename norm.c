@@ -82,7 +82,7 @@ int	create(t_last_list **list, int *size)
 	{
 		if ((*list)->str)
 			free((*list)->str);
-		(*list)->str = calloc(sizeof(char), (*size) + 1);
+		(*list)->str = ft_calloc(sizeof(char), (*size) + 1);
 		if (!(*list)->str)
 			return (ERR_MALLOC);
 		(*size) = 0;
@@ -93,7 +93,7 @@ int	create(t_last_list **list, int *size)
 		return (ERR_MALLOC);
 	(*list)->next->prev = (*list);
 	(*list) = (*list)->next;
-	(*list)->str = calloc(sizeof(char), (*size) + 1);
+	(*list)->str = ft_calloc(sizeof(char), (*size) + 1);
 	if (!(*list)->str)
 		return (ERR_MALLOC);
 	(*size) = 0;
@@ -286,7 +286,7 @@ int	do_next_stop_token(t_struct **parse, t_last_list **list)
 	{
 		if (step(&(*list)) == ERR_MALLOC)
 			return (ERR_MALLOC);
-		(*list)->str = calloc(sizeof(char), 3);
+		(*list)->str = ft_calloc(sizeof(char), 3);
 		if (!(*list)->str)
 			return (ERR_MALLOC);
 		(*list)->token = get_token(&(*parse), &(*list));

@@ -149,6 +149,11 @@ int	get_env(char **env, t_struct *s)
 		if (!s->env[i])
 		{
 			i--;
+			if (i < 0)
+			{
+				free(s->env);
+				break ;
+			}
 			for (; i != 0; i--)
 				free(s->env[i]);
 			free(s->env);
@@ -157,6 +162,7 @@ int	get_env(char **env, t_struct *s)
 		i++;
 	}
 	s->env[i] = NULL;
+	s->size_env = i;
 	return (SUCCESS);
 }
 
@@ -180,8 +186,13 @@ int	wait_pid(t_struct *s)
 				ret = WEXITSTATUS(status);
 			else
 				ret = 128 + WTERMSIG(status);
+			if (ret == 131)
+				ft_dprintf(2, "Quit (core dumped)\n");
+			else if (ret == 130)
+				ft_dprintf(2, "\n");
 		}
 	}
+	g_sig = 0;
 	return (ret);
 }
 
@@ -224,7 +235,6 @@ int	main(int argc, char **argv, char **env)
 	stat = 0;
 	g_sig = 0;
 	str = NULL;
-	s.exit = 0;
 	if (isatty(STDIN_FILENO) == -1)
 		return (ft_dprintf(STDERR_FILENO, "Wrong stdin\n"), EXIT_FAILURE);
 	(void)argv;
@@ -237,11 +247,17 @@ int	main(int argc, char **argv, char **env)
 	s.bad_exit = 0;
 	while (1 && stat != EXIT)
 	{
+		s.exit = 0;
 		s.bad_exit = 0;
 		s.is_first = 1;
 		s.is_last = 0;
 		s.num_err_exit = 0;
 		sig_init();
+		if (g_sig == 130)
+		{
+			s.exit_val = 130;
+			g_sig = 0;
+		}
 		str = readline("\033[1;96mMinishell$\033[0m ");
 		if (!str)
 		{
@@ -267,10 +283,24 @@ int	main(int argc, char **argv, char **env)
 		}
 		s.str = strdup(str);
 		s.err = 0;
-		ft_prototype_list(&s);
+		if (ft_prototype_list(&s) == ERR_MALLOC)
+		{
+			ft_dprintf(2, "Malloc\n");
+			free(s.str);
+			free(str);
+			s.exit_val = -2;
+			continue ;
+		}
 		s.head_parse = s.p_lst;
 		// ft_print_list(s.head_parse);
-		ft_change_list(&s);
+		if (ft_change_list(&s) == ERR_MALLOC)
+		{
+			ft_dprintf(2, "Malloc\n");
+			free(s.str);
+			free(str);
+			s.exit_val = -2;
+			continue ;
+		}
 		s.head_ll = s.l_lst;
 		s.p_lst = s.head_parse;
 		s.temp = s.head_ll;
@@ -295,7 +325,7 @@ int	main(int argc, char **argv, char **env)
 			continue ;
 		}
 		// ft_print_list2(s.l_lst);
-		s.tab[0] = NULL;
+		s.tab = NULL;
 		s.infile = NULL;
 		s.outfile = NULL;
 		s.mode_in = NOTHING;

@@ -49,9 +49,15 @@
 # define FAILURE -1000000
 # define WINNING 1000000
 # define ERR_FORK -200
-# define RED "\033[1;31m"
+# define RED "\033[6;31m"
 # define RESET "\033[0m"
 # define PURP "\033[1;95m"
+# define PURP2 "\033[6;35m"
+# define ORANGE "\033[6;91m"
+# define LIGHTB "\033[6;36m"
+# define BLUE "\033[6;94m"
+# define GREEN "\033[6;92m"
+# define YELLOW "\033[6;93m"
 # define ERR_PARENTHESIS "\033[1;31mMinishell: error: unclosed parenthesis\n\033[0m"
 # define ERR_QUOTES "\033[1;31mMinishell: error: unclosed quotes\n\033[0m"
 # define ERR_X1 "\033[1;95mMinishell: exit: "
@@ -99,10 +105,10 @@ typedef struct s_last_list
 
 typedef struct s_file
 {
-	char				*files[SIZE];
+	char				**files;
 	char				*here_doc_file;
-	int					modes[SIZE];
-	int					token[SIZE];
+	int					*modes;
+	int					*token;
 }						t_file;
 
 typedef struct s_tree
@@ -120,7 +126,7 @@ typedef struct s_struct
 {
 	char				*str;
 	int					err;
-	char				*tab[SIZE];
+	char				**tab;
 	char				*infile;
 	char				*outfile;
 	int					mode_in;
@@ -156,6 +162,7 @@ typedef struct s_struct
 	int					num_err_exit;
 	char				*string_error;
 	int					bad_exit;
+	int					size_env;
 }						t_struct;
 
 int						ft_prototype_list(t_struct *s);
@@ -201,5 +208,6 @@ void					free_all(t_struct *s, int ex);
 char					*expand(char *str, char **env, t_struct *s);
 int						epur_files(t_file *f, t_struct **s, int i);
 void					flush_files(t_file *file, t_struct *s);
+void					sig_child(void);
 
 #endif

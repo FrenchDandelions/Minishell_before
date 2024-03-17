@@ -25,6 +25,8 @@ int	ft_getchar(int c, char **ch)
 	char	*str;
 
 	str = (char *)malloc(sizeof(char) * 1);
+	if (!str)
+		return (0);
 	str[0] = c;
 	*ch = str;
 	return (1);

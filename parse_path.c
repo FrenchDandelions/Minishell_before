@@ -112,6 +112,6 @@ char	*get_path(char *cmd, char **env, int *flag)
 	}
 	if (all_path && !all_path[i])
 		return (ft_dprintf(2, "%s: : command not found\n", cmd), (*flag) = 2,
-			cmd);
+			free_array(all_path), free(path), cmd);
 	return (last_check(all_path, cmd, flag, path));
 }

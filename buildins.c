@@ -50,8 +50,6 @@ int	n_case(t_struct *s)
 	int	j;
 
 	i = 1;
-	if (!s->tab[0][0])
-		i++;
 	j = find_option(s->tab);
 	if (j)
 	{
@@ -78,8 +76,6 @@ void	ft_echo(t_struct *s)
 	i = 1;
 	if (!s->tab[1])
 		printf("\n");
-	if (!s->tab[0][0])
-		i++;
 	else if (!n_case(s))
 	{
 		while (s->tab[i] && s->tab[i + 1])
@@ -110,11 +106,60 @@ void	ft_cd(t_struct *s)
 	free_all(s, 0);
 }
 
+char	*get_color(int i)
+{
+	int	temp;
+
+	temp = i % 7;
+	if (temp == 0)
+		return (RED);
+	else if (temp == 1)
+		return (ORANGE);
+	else if (temp == 2)
+		return (YELLOW);
+	else if (temp == 3)
+		return (GREEN);
+	else if (temp == 4)
+		return (LIGHTB);
+	else if (temp == 5)
+		return (BLUE);
+	return (PURP2);
+}
+
+void	sort_and_print_env(char **env, int i, int j)
+{
+	char	*temp;
+
+	while (env[i])
+	{
+		j = 0;
+		while (env[j + 1])
+		{
+			if (env[j + 1] && ft_strcmp(env[j], env[j + 1]) > 0)
+			{
+				temp = env[j];
+				env[j] = env[j + 1];
+				env[j + 1] = temp;
+			}
+			j++;
+		}
+		i++;
+	}
+	i = 0;
+	while (env[i])
+	{
+		printf("%s%s\n%s", get_color(i), env[i], RESET);
+		i++;
+	}
+}
+
 void	ft_export(t_struct *s, char **env)
 {
 	(void)env;
-	(void)s;
-	printf("export\n");
+	if (!s->tab[1])
+		sort_and_print_env(s->env, 0, 0);
+	else
+		printf("export\n");
 	free_all(s, 0);
 }
 
