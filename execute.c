@@ -31,16 +31,23 @@ int	epur_files(t_file *f, t_struct **s, int i)
 {
 	char	*dup;
 
-	if (f->files[i])
+	// printf("Here : %d\n", f->token[i]);
+	if (f->files[i] && f->modes[i] != TK_DLMTR)
 	{
 		dup = takeoff_quotes(expand(f->files[i], (*s)->env, *s));
 		if (!dup)
 			return (ERR_MALLOC);
 		f->files[i] = dup;
-		i++;
 	}
-	if (f->files[i])
-		return (epur_files(f, s, i));
+	else if (f->files[i] && f->modes[i] == TK_DLMTR)
+	{
+		dup = ft_strdup(f->files[i]);
+		if (!dup)
+			return (ERR_MALLOC);
+		f->files[i] = dup;
+	}
+	if (f->files[i] && f->files[i + 1])
+		return (epur_files(f, s, i + 1));
 	return (SUCCESS);
 }
 
@@ -113,6 +120,7 @@ void	flush_files(t_file *file, t_struct *s)
 	while (file->files[i] != NULL)
 	{
 		free(file->files[i]);
+		file->files[i] = NULL;
 		file->modes[i] = NOTHING;
 		file->token[i] = NOTHING;
 		i++;
@@ -170,37 +178,6 @@ int	fill_cmd_tab(t_last_list **list, t_struct **s)
 	return (SUCCESS);
 }
 
-// static t_last_list	*new_node(void)
-// {
-// 	t_last_list	*list;
-
-// 	list = malloc(sizeof(t_last_list));
-// 	if (!list)
-// 		return (NULL);
-// 	list->next = NULL;
-// 	list->prev = NULL;
-// 	list->token = -100;
-// 	return (list);
-// }
-
-// static int	create(t_last_list **list)
-// {
-// 	if ((*list)->token == -100 || !(*list)->str)
-// 	{
-// 		if ((*list)->str)
-// 			free((*list)->str);
-// 		(*list)->str = NULL;
-// 		return (SUCCESS);
-// 	}
-// 	(*list)->next = new_node();
-// 	if (!(*list)->next)
-// 		return (ERR_MALLOC);
-// 	(*list)->next->prev = (*list);
-// 	(*list) = (*list)->next;
-// 	(*list)->str = NULL;
-// 	return (SUCCESS);
-// }
-
 int	check_buildin(t_struct *s)
 {
 	if (ft_strcmp(s->tab[0], "exit") == 0)
@@ -208,6 +185,8 @@ int	check_buildin(t_struct *s)
 	else if (ft_strcmp(s->tab[0], "export") == 0)
 		return (0);
 	else if (ft_strcmp(s->tab[0], "unset") == 0)
+		return (0);
+	else if (ft_strcmp(s->tab[0], "cd") == 0)
 		return (0);
 	return (1);
 }
@@ -220,6 +199,8 @@ int	execute_buildin_normal(t_struct *s)
 		return (ft_export_notchild(s, s->dup_env), NORMAL);
 	else if (ft_strcmp(s->tab[0], "unset") == 0)
 		return (ft_unset(s, s->dup_env), NORMAL);
+	else if (ft_strcmp(s->tab[0], "cd") == 0)
+		return (ft_cd(s), NORMAL);
 	return (SUCCESS);
 }
 
@@ -235,7 +216,6 @@ int	do_exec(t_struct **s, t_file *file, int stat)
 {
 	if ((*s)->tab[0] && check_buildin(*s) == 0 && (*s)->count_pipes == 0)
 		return (execute_buildin_normal(*s));
-	// if ((*s)->tab[0])
 	stat = exec(*s, file);
 	(*s)->is_first = 0;
 	(*s)->counter++;

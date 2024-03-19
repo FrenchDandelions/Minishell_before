@@ -47,6 +47,7 @@ void				*ft_realloc(void *ptr, size_t newsize, size_t oldsize);
 char				**ft_realloc_tab(char **ptr, size_t newsize,
 						size_t oldsize);
 void				ft_bzero(void *s, size_t n);
+void				ft_memdel(void *ptr);
 void				ft_putchar_fd(char c, int fd);
 void				ft_putstr_fd(char *s, int fd);
 void				ft_putendl_fd(char *s, int fd);

@@ -50,8 +50,8 @@ char	*find_in_path(char *needle, char **env, int len, t_struct *s)
 
 	size = (int)ft_strlen(needle);
 	i = 0;
-	if (len == 1 && size == 0)
-		return (ft_strdup(""));
+	// if (len == 1 && size == 0)
+	// 	return (ft_strdup(""));
 	if (size == 1 && needle[0] == '?')
 		return (ft_itoa(s->exit_val));
 	while (env[i] && needle[0])
@@ -124,24 +124,12 @@ char	*expand(char *str, char **env, t_struct *s)
 					}
 					if (len == 0)
 					{
-						if (!str[i])
-						{
-							dup = ft_strdup("");
-							if (!dup)
-								return (free(string), NULL);
-							dup2 = find_in_path(dup, env, 1, s);
-							if (!dup2)
-								return (free(dup), free(string), NULL);
-						}
-						if (str[i])
-						{
-							dup = ft_strdup("");
-							if (!dup)
-								return (free(string), NULL);
-							dup2 = find_in_path(dup, env, 0, s);
-							if (!dup2)
-								return (free(dup), free(string), NULL);
-						}
+						dup = ft_strdup("");
+						if (!dup)
+							return (free(string), NULL);
+						dup2 = find_in_path(dup, env, 0, s);
+						if (!dup2)
+							return (free(dup), free(string), NULL);
 					}
 					else
 					{
@@ -160,10 +148,8 @@ char	*expand(char *str, char **env, t_struct *s)
 					ft_sprintf(string + j, "%s", dup2);
 					j += (int)ft_strlen(dup2);
 					i += len;
-					free(dup);
-					dup = NULL;
-					free(dup2);
-					dup2 = NULL;
+					ft_memdel(dup);
+					ft_memdel(dup2);
 				}
 				if (str[i] && str[i] != '$' && str[i] != '\"')
 				{
@@ -192,24 +178,12 @@ char	*expand(char *str, char **env, t_struct *s)
 			}
 			if (len == 0)
 			{
-				if (!str[i])
-				{
-					dup = ft_strdup("");
-					if (!dup)
-						return (free(string), NULL);
-					dup2 = find_in_path(dup, env, 0, s);
-					if (!dup2)
-						return (free(dup), free(string), NULL);
-				}
-				if (str[i] && is_quotes(str[i]))
-				{
-					dup = ft_strdup("");
-					if (!dup)
-						return (free(string), NULL);
-					dup2 = find_in_path(dup, env, 1, s);
-					if (!dup2)
-						return (free(dup), free(string), NULL);
-				}
+				dup = ft_strdup("");
+				if (!dup)
+					return (free(string), NULL);
+				dup2 = find_in_path(dup, env, 0, s);
+				if (!dup2)
+					return (free(dup), free(string), NULL);
 			}
 			else
 			{
@@ -228,10 +202,8 @@ char	*expand(char *str, char **env, t_struct *s)
 			ft_sprintf(string + j, "%s", dup2);
 			j += (int)ft_strlen(dup2);
 			i += len;
-			free(dup);
-			dup = NULL;
-			free(dup2);
-			dup2 = NULL;
+			ft_memdel(dup);
+			ft_memdel(dup2);
 		}
 		if (str[i] && str[i] != '$')
 		{

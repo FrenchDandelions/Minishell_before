@@ -95,14 +95,10 @@ void	ft_pwd(t_struct *s)
 	if (getcwd(str, PATH_MAX))
 		printf("%s\n", str);
 	else
+	{
 		perror("getcwd");
-	free_all(s, 0);
-}
-
-void	ft_cd(t_struct *s)
-{
-	(void)s;
-	printf("cd\n");
+		free_all(s, 1);
+	}
 	free_all(s, 0);
 }
 

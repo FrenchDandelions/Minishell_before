@@ -72,37 +72,10 @@ int	print_error(char *str)
 	return (ERR_PARS);
 }
 
-int	generate_heredoc_name(t_struct *s)
-{
-	char	str[4096];
-	int		fd;
-	int		i;
-
-	i = 0;
-	s->here_doc_file = NULL;
-	ft_memcpy(str, "here_doc.txt", 12);
-	fd = open(str, O_CREAT | O_TRUNC | O_WRONLY, 0666);
-	if (fd == -1)
-	{
-		while (fd == -1)
-		{
-			ft_sprintf(str, "here_doc%d.txt", i);
-			if (ft_strcmp(str, "here_doc.txt") == 0)
-				return (ERR_MALLOC);
-			fd = open(str, O_CREAT | O_TRUNC | O_WRONLY, 0666);
-			i++;
-		}
-		close(fd);
-	}
-	s->here_doc_file = ft_strdup(str);
-	if (!s->here_doc_file)
-		return (ERR_MALLOC);
-	return (SUCCESS);
-}
-
 int	check_heredoc(t_last_list **list)
 {
-	int	err;
+	int		err;
+	char	*dup;
 
 	if ((*list)->token == TK_DLMTR)
 	{
@@ -113,7 +86,14 @@ int	check_heredoc(t_last_list **list)
 				|| (*list)->next->token == TK_SINGLE)
 			&& (*list)->token == TK_DLMTR)
 		{
-			err = open_heredoc(&(*list));
+			dup = ft_strdup((*list)->next->str);
+			if (!dup)
+				return (ERR_MALLOC);
+			dup = takeoff_quotes(dup);
+			if (!dup)
+				return (ERR_MALLOC);
+			err = open_heredoc(&(*list), dup);
+			ft_memdel(dup);
 			(*list) = (*list)->next;
 			return (err);
 		}

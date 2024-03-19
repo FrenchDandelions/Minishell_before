@@ -58,7 +58,7 @@ int	add_to_buffer(char **buf, char *str)
 // 	printf("\n");
 // }
 
-int	open_heredoc(t_last_list **list)
+int	open_heredoc(t_last_list **list, char *lim)
 {
 	char	*str;
 	char	*buf;
@@ -72,8 +72,15 @@ int	open_heredoc(t_last_list **list)
 		str = readline(PROMPT_HD);
 		if (!str)
 			return (dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
-					(*list)->next->str), end_heredoc(&(*list), buf, str));
-		if (strncmp(str, (*list)->next->str, (int)ft_strlen(str)) == 0)
+					lim), end_heredoc(&(*list), buf, str));
+		if (!str[0])
+		{
+			free(str);
+			str = ft_strdup("\n");
+			if (!str)
+				return (ERR_MALLOC);
+		}
+		if (ft_strncmp(str, lim, (int)ft_strlen(str)) == 0)
 			return (end_heredoc(&(*list), buf, str));
 		str = ft_gnl_strjoin(str, "\n", 1);
 		if (add_to_buffer(&buf, str) == ERR_MALLOC)

@@ -177,7 +177,7 @@ int						ft_change_list(t_struct *parse);
 void					ft_free_changed_list(t_last_list *list);
 int						parser(t_struct *s);
 // char					*get_next_line(int fd);
-int						open_heredoc(t_last_list **list);
+int						open_heredoc(t_last_list **list, char *lim);
 char					*ft_gnl_strjoin(char *s1, char *s2, size_t len);
 int						parse_heredoc(t_struct *s);
 int						quote_checker(char *str);
@@ -217,5 +217,6 @@ void					flush_files(t_file *file, t_struct *s);
 void					sig_child(void);
 int						is_alnum_undescore(int c);
 char					**dup_array(char **tab);
+int						check_if_is_in_env2(char *env_line, char *var);
 
 #endif
