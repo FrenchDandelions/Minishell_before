@@ -115,6 +115,8 @@ int	parse_heredoc(t_struct *s)
 			return (print_error("<<"));
 		else if (err == ERR_MALLOC)
 			return (ERR_MALLOC);
+		else if (err == QUIT)
+			return (QUIT);
 		temp = temp->next;
 	}
 	return (SUCCESS);

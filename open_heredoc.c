@@ -20,7 +20,7 @@ int	end_heredoc(t_last_list **list, char *buf, char *str)
 	free((*list)->next->str);
 	if (buf)
 	{
-		(*list)->next->str = strdup(buf);
+		(*list)->next->str = ft_strdup(buf);
 		if (!(*list)->next->str)
 			return (free(buf), ERR_MALLOC);
 		free(buf);
@@ -38,41 +38,59 @@ int	add_to_buffer(char **buf, char *str)
 {
 	if ((*buf))
 	{
-		(*buf) = ft_gnl_strjoin((*buf), str, (int)strlen(str));
+		(*buf) = ft_gnl_strjoin((*buf), str, (int)ft_strlen(str));
 		if (!(*buf))
 			return (ERR_MALLOC);
 	}
 	else
 	{
-		(*buf) = strdup(str);
+		(*buf) = ft_strdup(str);
 		if (!(*buf))
 			return (free(str), ERR_MALLOC);
 	}
 	return (SUCCESS);
 }
 
-// void	heredoc_sig(int code)
-// {
-// 	(void)code;
-// 	g_sig = 130;
-// 	printf("\n");
-// }
+void	heredoc_sig(int code)
+{
+	(void)code;
+	g_sig = 130;
+	// ft_dprintf(STDIN_FILENO, "\n");
+	printf("\n");
+	close(STDIN_FILENO);
+	// rl_on_new_line();
+	// rl_replace_line("", 0);
+	// rl_redisplay();
+}
 
 int	open_heredoc(t_last_list **list, char *lim)
 {
 	char	*str;
 	char	*buf;
+	int		fd;
 
+	fd = dup(STDIN_FILENO);
 	buf = NULL;
-	// sigaction(SIGQUIT, SA_RESETHAND, )
-	// signal(SIGQUIT, &heredoc_sig);
+	signal(SIGINT, &heredoc_sig);
 	while (1)
 	{
-		// sigaction(SIGQUIT, );
 		str = readline(PROMPT_HD);
-		if (!str)
-			return (dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
+		if (!str || g_sig == 130)
+		{
+			if (g_sig == 130)
+			{
+				if (str)
+					free(str);
+				if (buf)
+					ft_memdel(buf);
+				g_sig = 0;
+				dup2(fd, STDIN_FILENO);
+				close(fd);
+				return (QUIT);
+			}
+			return (ft_dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
 					lim), end_heredoc(&(*list), buf, str));
+		}
 		if (!str[0])
 		{
 			free(str);
@@ -87,4 +105,5 @@ int	open_heredoc(t_last_list **list, char *lim)
 			return (ERR_MALLOC);
 		free(str);
 	}
+	return (0);
 }

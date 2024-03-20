@@ -255,12 +255,7 @@ int	main(int argc, char **argv, char **env)
 		s.is_first = 1;
 		s.is_last = 0;
 		s.num_err_exit = 0;
-		sig_init();
-		if (g_sig == 130)
-		{
-			s.exit_val = 130;
-			g_sig = 0;
-		}
+		sig_init(&s);
 		str = readline(PROMPT);
 		if (!str)
 		{
@@ -268,8 +263,18 @@ int	main(int argc, char **argv, char **env)
 			free_env(s.env);
 			free_env(s.dup_env);
 			ft_dprintf(2, "\033[1;95mexit\n\033[0m");
-			s.exit_val = 0;
+			if (g_sig == 130)
+				s.exit_val = 130;
+			else if (g_sig == 131)
+				s.exit_val = 131;
+			else
+				s.exit_val = 0;
 			break ;
+		}
+		if (g_sig == 130)
+		{
+			s.exit_val = 130;
+			g_sig = 0;
 		}
 		add_history((const char *)str);
 		if (quote_checker(str) < SUCCESS)
@@ -319,7 +324,7 @@ int	main(int argc, char **argv, char **env)
 		err2 = parse_heredoc(&s);
 		if (err2 == ERR_MALLOC || err == ERR_MALLOC)
 		{
-			dprintf(STDERR_FILENO, "ERR_MALLOC");
+			ft_dprintf(STDERR_FILENO, "ERR_MALLOC");
 			ft_free_changed_list(s.l_lst);
 			free(s.str);
 			free(str);
@@ -332,6 +337,14 @@ int	main(int argc, char **argv, char **env)
 			free(s.str);
 			free(str);
 			s.exit_val = 2;
+			continue ;
+		}
+		if (err2 == QUIT)
+		{
+			ft_free_changed_list(s.l_lst);
+			free(s.str);
+			free(str);
+			s.exit_val = 130;
 			continue ;
 		}
 		// ft_print_list2(s.l_lst);

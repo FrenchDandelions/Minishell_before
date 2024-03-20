@@ -49,6 +49,7 @@
 # define FAILURE -1000000
 # define WINNING 1000000
 # define ERR_FORK -200
+# define QUIT -3000
 # define NORMAL 888
 # define RED "\033[1;31m"
 # define RESET "\033[0m"
@@ -79,10 +80,6 @@
 # include <string.h>
 # include <sys/wait.h>
 # include <unistd.h>
-
-void					sig_int(int code);
-void					sig_quit(int code);
-void					sig_init(void);
 
 extern int				g_sig;
 
@@ -169,6 +166,10 @@ typedef struct s_struct
 	int					exported;
 	int					unsetted;
 }						t_struct;
+
+void					sig_int(int code);
+void					sig_quit(int code);
+void					sig_init(t_struct *s);
 
 int						ft_prototype_list(t_struct *s);
 void					ft_free_parse_list(t_parse_list *list);

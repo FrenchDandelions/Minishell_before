@@ -216,12 +216,12 @@ int	exec(t_struct *s, t_file *file)
 	if (s->counter != s->count_pipes)
 		if (pipe(s->pipe) == -1)
 			return (ft_dprintf(2, "pipe\n"), -1);
+	sig_child();
 	s->pid = fork();
 	if (s->pid < 0)
 		return (err_fork(s->pipe, 0));
 	else if (!s->pid)
 	{
-		sig_child();
 		if (do_files(file, s))
 			free_all(s, 1);
 		if (!s->tab[0])
@@ -240,6 +240,7 @@ int	exec(t_struct *s, t_file *file)
 		s->last_fd = s->pipe[0];
 		if (s->counter != s->count_pipes)
 			close(s->pipe[1]);
+		g_sig = 0;
 		return (SUCCESS);
 	}
 	return (SUCCESS);

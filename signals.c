@@ -22,13 +22,7 @@ void	sig_int(int code)
 	rl_replace_line("", 0);
 	rl_on_new_line();
 	rl_redisplay();
-	// signal(code, SIG_IGN);x
 }
-
-// void	sig_quit(int code)
-// {
-// 	signal(code, SIG_IGN);
-// }
 
 void	handle_child(int code)
 {
@@ -38,10 +32,11 @@ void	handle_child(int code)
 		g_sig = 130;
 }
 
-void	sig_init(void)
+void	sig_init(t_struct *s)
 {
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, &sig_int);
+	(void)s;
 }
 
 void	sig_child(void)

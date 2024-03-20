@@ -361,7 +361,7 @@ void	get_err_string(t_struct *s, int len)
 	char	*str;
 	int		i;
 
-	str = calloc(sizeof(char), len);
+	str = ft_calloc(sizeof(char), len);
 	if (!str)
 		free_all(s, -2);
 	i = 0;
@@ -384,10 +384,13 @@ void	set_error(t_struct *s)
 	get_err_string(s, len);
 }
 
-void	set_val(t_struct *s)
+void	set_val(t_struct *s, int i)
 {
-	s->bad_exit = 1;
-	s->exit_val = 1;
+	if (s->exit_val != 130 && s->exit_val != 131)
+	{
+		s->bad_exit = i;
+		s->exit_val = i;
+	}
 }
 
 void	ft_exit(t_struct *s)
@@ -406,7 +409,7 @@ void	ft_exit(t_struct *s)
 		else
 		{
 			if (s->tab[2])
-				set_val(s);
+				set_val(s, 1);
 			else if (stat < 0 || stat > 256)
 				s->exit_arg = stat % 256;
 			else
@@ -414,5 +417,5 @@ void	ft_exit(t_struct *s)
 		}
 	}
 	else
-		s->exit_arg = 0;
+		set_val(s, 0);
 }

@@ -18,8 +18,6 @@ int	open_output(char *s, int token, t_struct *st)
 	int		fd;
 
 	str = ft_strdup(s);
-	// (void)st;
-	// str = expand_dollar(str, st);
 	if (!str)
 		return (ERR_MALLOC);
 	if (token != TK_ARG)
@@ -49,8 +47,6 @@ int	open_append(char *s, int token, t_struct *st)
 	int		fd;
 
 	str = ft_strdup(s);
-	// (void)st;
-	// str = expand_dollar(str, st);
 	if (!str)
 		return (ERR_MALLOC);
 	if (token != TK_ARG)
@@ -80,8 +76,6 @@ int	open_input(char *s, int token, t_struct *st)
 	int		fd;
 
 	str = ft_strdup(s);
-	// (void)st;
-	// str = expand_dollar(str, st);
 	if (!str)
 		return (ERR_MALLOC);
 	if (token != TK_ARG)
@@ -156,9 +150,6 @@ int	split_and_expand(char *s, int fd, t_struct *st)
 		return (ERR_MALLOC);
 	while (tab[i])
 	{
-		// str = expand_dollar(tab[i], st);
-		// if (!str)
-		// 	return (free(tab), ERR_MALLOC);
 		if (tab[i + 1])
 		{
 			if (join_heredoc(&string, str, 0) == ERR_MALLOC)
