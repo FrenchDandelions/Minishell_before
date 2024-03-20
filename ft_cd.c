@@ -189,12 +189,16 @@ int	change_paths(t_struct *s, char *oldpwd, int check)
 
 void	ft_cd(t_struct *s)
 {
+	int	stat;
+
 	if (!s->tab[1])
-		go_home(s);
+		stat = go_home(s);
 	else if (s->tab[2])
-		print_error_cd(s);
+		stat = print_error_cd(s);
 	else
-		find_path(s);
+		stat = find_path(s);
+	if (stat == ERR_MALLOC)
+		ft_dprintf(STDERR_FILENO, "Fatal, malloc error in cd\n");
 	if (s->count_pipes)
 		free_all(s, 0);
 }

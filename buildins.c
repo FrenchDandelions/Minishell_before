@@ -416,6 +416,6 @@ void	ft_exit(t_struct *s)
 				s->exit_arg = stat;
 		}
 	}
-	else
-		set_val(s, 0);
+	// else
+	// 	set_val(s, 0);
 }

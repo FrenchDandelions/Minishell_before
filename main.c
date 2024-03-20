@@ -231,8 +231,8 @@ int	main(int argc, char **argv, char **env)
 	stat = 0;
 	g_sig = 0;
 	str = NULL;
-	// if (isatty(STDIN_FILENO) == 0)
-	// 	return (ft_dprintf(STDERR_FILENO, "Wrong STDIN\n"), EXIT_FAILURE);
+	if (isatty(STDIN_FILENO) == 0)
+		return (ft_dprintf(STDERR_FILENO, "Wrong STDIN\n"), EXIT_FAILURE);
 	(void)argv;
 	(void)argc;
 	if (!env[0])
@@ -267,8 +267,6 @@ int	main(int argc, char **argv, char **env)
 				s.exit_val = 130;
 			else if (g_sig == 131)
 				s.exit_val = 131;
-			else
-				s.exit_val = 0;
 			break ;
 		}
 		if (g_sig == 130)
