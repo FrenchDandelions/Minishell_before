@@ -40,8 +40,6 @@ void	exit_error_array(char *str, t_struct *s, char *s1, int index)
 		ft_putstr_fd(s->tab[0], STDERR_FILENO);
 	else if (index == 1 && s1 && !s1[0])
 		ft_putstr_fd(s1, STDERR_FILENO);
-	// if (s1)
-	// 	free(s1);
 	ft_putendl_fd(str, STDERR_FILENO);
 	if (index == 1)
 		free_all(s, 127);
@@ -211,6 +209,17 @@ int	exec_path(t_struct *s, int index, int fake_env)
 	return (SUCCESS);
 }
 
+int	do_parent(t_struct *s)
+{
+	if (!s->is_first)
+		close(s->last_fd);
+	s->last_fd = s->pipe[0];
+	if (s->counter != s->count_pipes)
+		close(s->pipe[1]);
+	g_sig = 0;
+	return (SUCCESS);
+}
+
 int	exec(t_struct *s, t_file *file)
 {
 	if (s->counter != s->count_pipes)
@@ -234,14 +243,6 @@ int	exec(t_struct *s, t_file *file)
 			exec_path(s, ft_is_buildin(s->tab[0]), 1);
 	}
 	else
-	{
-		if (!s->is_first)
-			close(s->last_fd);
-		s->last_fd = s->pipe[0];
-		if (s->counter != s->count_pipes)
-			close(s->pipe[1]);
-		g_sig = 0;
-		return (SUCCESS);
-	}
+		return (do_parent(s));
 	return (SUCCESS);
 }

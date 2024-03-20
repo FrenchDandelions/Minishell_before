@@ -31,7 +31,6 @@ int	epur_files(t_file *f, t_struct **s, int i)
 {
 	char	*dup;
 
-	// printf("Here : %d\n", f->token[i]);
 	if (f->files[i] && f->modes[i] != TK_DLMTR)
 	{
 		dup = takeoff_quotes(expand(f->files[i], (*s)->env, *s));

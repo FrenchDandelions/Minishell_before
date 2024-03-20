@@ -386,11 +386,8 @@ void	set_error(t_struct *s)
 
 void	set_val(t_struct *s, int i)
 {
-	if (s->exit_val != 130 && s->exit_val != 131)
-	{
-		s->bad_exit = i;
-		s->exit_val = i;
-	}
+	s->bad_exit = i;
+	s->exit_val = i;
 }
 
 void	ft_exit(t_struct *s)
