@@ -59,7 +59,9 @@ int	free_cd(t_struct *s, char *home)
 		free(home);
 	if (s->count_pipes)
 		free_all(s, 0);
-	s->exit_val = 0;
+	if (!s->error_cd)
+		s->exit_val = 0;
+	s->error_cd = 0;
 	return (0);
 }
 
@@ -180,6 +182,8 @@ int	change_paths(t_struct *s, char *oldpwd, int check)
 	if (!getcwd(pwd, PATH_MAX))
 	{
 		perror("cd: error retrieving current directory: getcwd: cannot access parent directories: ");
+		s->exit_val = 1;
+		s->error_cd = 1;
 		check = 1;
 	}
 	else if (change_new(s, pwd, check) == ERR_MALLOC)

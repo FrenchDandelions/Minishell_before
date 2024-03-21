@@ -97,7 +97,7 @@ char	*expand(char *str, char **env, t_struct *s)
 				i++;
 				j++;
 			}
-			if (str[i])
+			if (str[i] && !is_quotes(str[i]))
 			{
 				ft_sprintf(string + j, "%c", str[i]);
 				i++;
@@ -158,7 +158,7 @@ char	*expand(char *str, char **env, t_struct *s)
 					j++;
 				}
 			}
-			if (str[i])
+			if (str[i] && !is_quotes(str[i]))
 			{
 				ft_sprintf(string + j, "%c", str[i]);
 				i++;
@@ -205,7 +205,7 @@ char	*expand(char *str, char **env, t_struct *s)
 			ft_memdel(dup);
 			ft_memdel(dup2);
 		}
-		if (str[i] && str[i] != '$')
+		if (str[i] && str[i] != '$' && !is_quotes(str[i]))
 		{
 			ft_sprintf(string + j, "%c", str[i]);
 			i++;

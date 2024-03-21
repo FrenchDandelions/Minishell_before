@@ -195,9 +195,9 @@ int	exec_path(t_struct *s, int index, int fake_env)
 	if (fake_env)
 	{
 		if (index == 1)
-			exec_buildin(s, s->dup_env, fake_env, cmd);
+			exec_buildin(s, s->env, fake_env, cmd);
 		else
-			exec_normal(s, s->dup_env);
+			exec_normal(s, s->env);
 	}
 	else
 	{

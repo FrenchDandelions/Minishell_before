@@ -231,6 +231,7 @@ int	main(int argc, char **argv, char **env)
 	stat = 0;
 	g_sig = 0;
 	str = NULL;
+	s.error_cd = 0;
 	if (isatty(STDIN_FILENO) == 0)
 		return (ft_dprintf(STDERR_FILENO, "Wrong STDIN\n"), EXIT_FAILURE);
 	(void)argv;
@@ -244,6 +245,7 @@ int	main(int argc, char **argv, char **env)
 	if (!s.dup_env)
 		return (ft_dprintf(2, "Malloc\n"), -2);
 	s.err = NOTHING;
+	s.string_error = NULL;
 	s.exit_val = 0;
 	s.bad_exit = 0;
 	while (1 && stat != EXIT)

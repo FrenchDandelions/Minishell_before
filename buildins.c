@@ -305,24 +305,20 @@ int	longlonglen(long long int n)
 		i++;
 	while (num)
 	{
-		i++;
 		num /= 10;
+		i++;
 	}
 	return (i);
 }
 
-int	ft_strlen_ps(char *s)
+int	ft_strlen_ps(char *s, int i, int j)
 {
-	int	i;
-	int	j;
-
-	i = 0;
-	j = 0;
 	if (s[i] == '-')
 		i++;
 	while (s[i + j])
 	{
-		if ((s[i + j] == '0' && i == 1) || (s[i + j] == '0' && i == 0))
+		if ((s[i + j] == '0' && s[0] == '-' && i == 1) || (s[i + j] == '0'
+				&& i == 0))
 		{
 			while (s[i + j] == '0')
 				j++;
@@ -400,7 +396,7 @@ void	ft_exit(t_struct *s)
 	if (s->tab[1])
 	{
 		stat = ft_atoll(s->tab[1]);
-		if ((longlonglen(stat) != ft_strlen_ps(s->tab[1]))
+		if ((longlonglen(stat) != ft_strlen_ps(s->tab[1], 0, 0))
 			|| !is_only_num(s->tab[1]))
 			set_error(s);
 		else

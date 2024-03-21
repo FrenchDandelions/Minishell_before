@@ -165,6 +165,7 @@ typedef struct s_struct
 	int					size_env;
 	int					exported;
 	int					unsetted;
+	int					error_cd;
 }						t_struct;
 
 void					sig_int(int code);

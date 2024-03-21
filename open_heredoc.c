@@ -88,6 +88,7 @@ int	open_heredoc(t_last_list **list, char *lim)
 				close(fd);
 				return (QUIT);
 			}
+			close(fd);
 			return (ft_dprintf(STDERR_FILENO, "%s%s')\n\033[0m", ERR_MINI_DOC,
 					lim), end_heredoc(&(*list), buf, str));
 		}
@@ -96,13 +97,13 @@ int	open_heredoc(t_last_list **list, char *lim)
 			free(str);
 			str = ft_strdup("\n");
 			if (!str)
-				return (ERR_MALLOC);
+				return (close(fd), ERR_MALLOC);
 		}
 		if (ft_strncmp(str, lim, (int)ft_strlen(str)) == 0)
-			return (end_heredoc(&(*list), buf, str));
+			return (close(fd), end_heredoc(&(*list), buf, str));
 		str = ft_gnl_strjoin(str, "\n", 1);
 		if (add_to_buffer(&buf, str) == ERR_MALLOC)
-			return (ERR_MALLOC);
+			return (close(fd), ERR_MALLOC);
 		free(str);
 	}
 	return (0);
